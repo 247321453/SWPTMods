@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30503.244
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SWPT-Exp", "SWPT-Exp\SWPT-Exp.csproj", "{3A4565A7-E471-40DB-A0B2-2CD6E755EFD1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedExperience", "SharedExperience\SharedExperience.csproj", "{3A4565A7-E471-40DB-A0B2-2CD6E755EFD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPickup", "AutoPickup\AutoPickup.csproj", "{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{3A4565A7-E471-40DB-A0B2-2CD6E755EFD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A4565A7-E471-40DB-A0B2-2CD6E755EFD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A4565A7-E471-40DB-A0B2-2CD6E755EFD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
