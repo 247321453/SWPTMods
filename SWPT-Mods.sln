@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedExperience", "SharedE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPickup", "AutoPickup\AutoPickup.csproj", "{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixPatch", "FixPatch\FixPatch.csproj", "{039F75A3-A882-44FE-B480-221E02C0A2FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B72F8AE-EDB0-43F6-9416-3D9B99C1C0E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{039F75A3-A882-44FE-B480-221E02C0A2FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{039F75A3-A882-44FE-B480-221E02C0A2FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{039F75A3-A882-44FE-B480-221E02C0A2FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{039F75A3-A882-44FE-B480-221E02C0A2FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

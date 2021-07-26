@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace SharedExperience
 {
-    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.1")]
+    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.2")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -22,10 +22,15 @@ namespace SharedExperience
 
         public static ConfigEntry<bool> isShared;
 
+        public static ConfigEntry<KeyCode> hotKey;
         /// <summary>
         /// 辅助击杀经验倍率
         /// </summary>
         public static ConfigEntry<float> partyExpRate;
+
+        public static ConfigEntry<string> sharedEnableStr;
+        public static ConfigEntry<string> sharedDisableStr;
+
         public static void Dbgl(string str = "", bool pref = true)
         {
             bool value = BepInExPlugin.isDebug.Value;
@@ -41,10 +46,31 @@ namespace SharedExperience
             BepInExPlugin.context = this;
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
+            BepInExPlugin.hotKey = base.Config.Bind<KeyCode>("Options", "HotKey", KeyCode.S, "left Ctrl + hotkey to toggle shared.");
             BepInExPlugin.isShared = base.Config.Bind<bool>("Options", "IsShared", true, "if `IsShared = true` then killer's exp is (originalExp * (1 - partyExpRate * partyCount))");
             BepInExPlugin.partyExpRate = base.Config.Bind<float>("Options", "PartyExpRate", 0.1f, "party members add exp rate");
+            BepInExPlugin.sharedEnableStr = base.Config.Bind<string>("Options", "EnableTip", "Shared EXP Open", "isShared=true");
+            BepInExPlugin.sharedDisableStr = base.Config.Bind<string>("Options", "DisableTip", "Shared EXP Close", "isShared=false");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Dbgl("Plugin awake", true);
+        }
+
+        private void Update()
+        {
+            var key = new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.LeftControl);
+            if (key.IsDown())
+            {
+                BepInExPlugin.isShared.Value = !BepInExPlugin.isShared.Value;
+                BepInExPlugin.Dbgl(string.Format("set exp share: {0}", BepInExPlugin.isShared.Value), true);
+                if (BepInExPlugin.isShared.Value)
+                {
+                    Global.code.uiCombat.AddPrompt("Shared EXP Open");
+                }
+                else
+                {
+                    Global.code.uiCombat.AddPrompt("Shared EXP Close");
+                }
+            }
         }
 
         #region old
@@ -68,15 +94,15 @@ namespace SharedExperience
         //     //Debug.Log("当你看到这条消息时，就表示我已经被关闭一次了!");
         // }
         #endregion
-   /*     [HarmonyPatch(typeof(ID), "AddExp")]
+        [HarmonyPatch(typeof(ID), "AddExp")]
         private static class ID_AddExp_Patch
         {
             private static void Prefix(ID __instance, int exp)
             {
-                Dbgl(__instance.name + ".AddExp(" + exp+")");
+                Dbgl(__instance.name + ".AddExp(" + exp + ")");
             }
         }
-   */
+
 
         [HarmonyPatch(typeof(Monster), "Die")]
         private static class Monster_Die_Patch
@@ -99,12 +125,17 @@ namespace SharedExperience
                         int num = 50;
                         num += 20 * __instance._ID.level;
                         num *= (int)(__instance.enemyRarity + 1);
+                        float rate = BepInExPlugin.partyExpRate.Value;
+                        if (rate >= 1)
+                        {
+                            rate = 0.99f;
+                        }
                         //经验倍率
-                        int exp = (int)(num * BepInExPlugin.partyExpRate.Value);
+                        int exp = (int)(num * rate);
                         if (exp > 0)
                         {
                             var player_id = Player.code._ID;
-                            Dbgl(killer.name + " kill monster, is player=" + (killer == player_id));
+                            Dbgl(killer.name + " kill monster, is player=" + (killer == player_id) + ", all exp=" + num + ", share exp=" + exp);
                             //killer.AddExp(num);
                             foreach (Transform transform in Global.code.playerCombatParty.items)
                             {
@@ -114,18 +145,33 @@ namespace SharedExperience
                                     if (comp && comp != killer && comp.health > 0)
                                     {
                                         Dbgl("team kill monster, add exp " + exp + " to " + comp.name);
-                                        comp.AddExp(exp);
-                                        num -= exp;
+                                        if (exp > num)
+                                        {
+                                            //留给击杀者
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            comp.AddExp(exp);
+                                            num -= exp;
+                                            if (num <= 0)
+                                            {
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
                             }
-                            if (killer != player_id)
+                            if (killer != player_id && num > 0)
                             {
                                 if (player_id.health > 0)
                                 {
                                     Dbgl("team kill monster, player add exp:" + exp);
-                                    player_id.AddExp(exp);
-                                    num -= exp;
+                                    if (exp < num)
+                                    {
+                                        player_id.AddExp(exp);
+                                        num -= exp;
+                                    }
                                 }
                                 else
                                 {
@@ -135,17 +181,15 @@ namespace SharedExperience
                         }
                         if (BepInExPlugin.isShared.Value)
                         {
-                            if (num < exp)
-                            {
-                                num = exp;
-                            }
                             if (num <= 0)
                             {
+                                //分太多给队友了
                                 num = 1;
                             }
+
                             killer.AddExp(num);
                             __instance._ID.damageSource = null;
-                            Dbgl(killer.name + " add exp " + num);
+                            Dbgl("killer:"+killer.name + " add exp " + num);
 
                             #region orgi code
                             Global.code.uiAchievements.AddPoint(AchievementType.totalkills, 1);

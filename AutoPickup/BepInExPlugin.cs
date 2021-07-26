@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace AutoPickup
 {
-    [BepInPlugin("caicai.AutoPickup", "Auto Pickup", "0.0.1")]
+    [BepInPlugin("caicai.AutoPickup", "Auto Pickup", "0.0.2")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -14,7 +14,7 @@ namespace AutoPickup
         public static ConfigEntry<bool> modEnabled;
 
         public static ConfigEntry<bool> isDebug;
-
+        public static ConfigEntry<KeyCode> hotKey;
         /// <summary>
         /// 仅拾取黄金和水晶
         /// </summary>
@@ -22,6 +22,10 @@ namespace AutoPickup
 
         public static ConfigEntry<int> filterRarity;
 
+        public static ConfigEntry<KeyCode> filterHotKey;
+
+        public static ConfigEntry<string> onlyGoldAndCrystalsEnableStr;
+        public static ConfigEntry<string> onlyGoldAndCrystalsDisableStr;
         public static void Dbgl(string str = "", bool pref = true)
         {
             bool value = BepInExPlugin.isDebug.Value;
@@ -37,10 +41,61 @@ namespace AutoPickup
             BepInExPlugin.context = this;
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
-            BepInExPlugin.filterRarity = base.Config.Bind<int>("General", "FilterRarity", 2, "Default: Blue, Whilte:1, Blue:2, Yellow:3 Green:4 Red:5 Cyan:6");
+            BepInExPlugin.hotKey = base.Config.Bind<KeyCode>("Options", "HotKey", KeyCode.A, "left Ctrl + hotkey to toggle pick up all items.");
+            BepInExPlugin.filterRarity = base.Config.Bind<int>("Options", "FilterRarity", 2, "Default: Blue, Whilte:1, Blue:2, Yellow:3 Green:4 Red:5 Cyan:6   [hotKey:left ctrl+1~6]");
             BepInExPlugin.isOnlyGoldAndCrystals = base.Config.Bind<bool>("Options", "isOnlyGoldAndCrystals", true, "only auto pickup golds and crystals.");
+            BepInExPlugin.onlyGoldAndCrystalsEnableStr = base.Config.Bind<string>("Options", "EnableTip", "Pickup Gold and Crustals", "isOnlyGoldAndCrystals=true");
+            BepInExPlugin.onlyGoldAndCrystalsDisableStr = base.Config.Bind<string>("Options", "DisableTip", "Pickup All Items", "isOnlyGoldAndCrystals=false");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Dbgl("Plugin awake", true);
+        }
+
+        private void Update()
+        {
+            var key = new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.LeftControl);
+            if (key.IsDown())
+            {
+                BepInExPlugin.isOnlyGoldAndCrystals.Value = !BepInExPlugin.isOnlyGoldAndCrystals.Value;
+                BepInExPlugin.Dbgl(string.Format("set isOnlyGoldAndCrystals: {0}", BepInExPlugin.isOnlyGoldAndCrystals.Value), true);
+                if (BepInExPlugin.isOnlyGoldAndCrystals.Value)
+                {
+                    Global.code.uiCombat.AddPrompt(BepInExPlugin.onlyGoldAndCrystalsEnableStr.Value);
+                }
+                else
+                {
+                    Global.code.uiCombat.AddPrompt(BepInExPlugin.onlyGoldAndCrystalsDisableStr.Value);
+                }
+            }
+            if (new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.Alpha1).IsDown())
+            {
+                BepInExPlugin.filterRarity.Value = 1;
+                Global.code.uiCombat.AddPrompt("Filter:Whilte");
+            }
+            else if (new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.Alpha2).IsDown())
+            {
+                BepInExPlugin.filterRarity.Value = 2;
+                Global.code.uiCombat.AddPrompt("Filter:Blue");
+            }
+            else if (new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.Alpha3).IsDown())
+            {
+                BepInExPlugin.filterRarity.Value = 3;
+                Global.code.uiCombat.AddPrompt("Filter:Yellow");
+            }
+            else if (new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.Alpha4).IsDown())
+            {
+                BepInExPlugin.filterRarity.Value = 4;
+                Global.code.uiCombat.AddPrompt("Filter:Green");
+            }
+            else if(new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.Alpha5).IsDown())
+            {
+                BepInExPlugin.filterRarity.Value = 5;
+                Global.code.uiCombat.AddPrompt("Filter:Red");
+            }
+            else if (new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.Alpha6).IsDown())
+            {
+                BepInExPlugin.filterRarity.Value = 6;
+                Global.code.uiCombat.AddPrompt("Filter:Cyan");
+            }
         }
 
         #region old
@@ -86,7 +141,7 @@ namespace AutoPickup
                     {
                         if (Global.code.AddItemToPlayerStorage(__instance.transform, true))
                         {
-                            Debug.Log( __instance.itemName + " auto pick up");
+                            Debug.Log(__instance.itemName + " auto pick up");
                             __instance.InitiateInteract();
                             return;
                         }
@@ -95,7 +150,7 @@ namespace AutoPickup
                     {
                         if (Global.code.AddItemToPlayerStorage(__instance.transform, true))
                         {
-                            Debug.Log(__instance.itemName + " auto pick up, ratity="+ __instance.rarity);
+                            Debug.Log(__instance.itemName + " auto pick up, ratity=" + __instance.rarity);
                             __instance.Pickup();
                             return;
                         }
@@ -104,10 +159,11 @@ namespace AutoPickup
             }
         }
 
-        private static bool isBook(string name) {
-            return "Experience Book" == name 
+        private static bool isBook(string name)
+        {
+            return "Experience Book" == name
                 || "Experience Scroll" == name
-                || "Golden Key" == name 
+                || "Golden Key" == name
                 || "Key" == name;
         }
     }
