@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPickup", "AutoPickup\Au
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixPatch", "FixPatch\FixPatch.csproj", "{039F75A3-A882-44FE-B480-221E02C0A2FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnhanceEquip", "EnhanceEquip\EnhanceEquip.csproj", "{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{039F75A3-A882-44FE-B480-221E02C0A2FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{039F75A3-A882-44FE-B480-221E02C0A2FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{039F75A3-A882-44FE-B480-221E02C0A2FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

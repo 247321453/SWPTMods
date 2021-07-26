@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace SharedExperience
 {
-    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.2")]
+    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.4")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -64,11 +64,11 @@ namespace SharedExperience
                 BepInExPlugin.Dbgl(string.Format("set exp share: {0}", BepInExPlugin.isShared.Value), true);
                 if (BepInExPlugin.isShared.Value)
                 {
-                    Global.code.uiCombat.AddPrompt("Shared EXP Open");
+                    Global.code.uiCombat.AddRollHint(BepInExPlugin.sharedEnableStr.Value, Color.green);
                 }
                 else
                 {
-                    Global.code.uiCombat.AddPrompt("Shared EXP Close");
+                    Global.code.uiCombat.AddRollHint(BepInExPlugin.sharedDisableStr.Value, Color.green);
                 }
             }
         }

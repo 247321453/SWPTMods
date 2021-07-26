@@ -8,7 +8,7 @@ using UnityEngine.AI;
 
 namespace FixPatch
 {
-    [BepInPlugin("caicai.FixPatch", "Fix Patch", "0.0.1")]
+    [BepInPlugin("caicai.FixPatch", "AI Patch", "0.0.1")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -74,6 +74,43 @@ namespace FixPatch
                  }
              }
         */
+        [HarmonyPatch(typeof(ID), "AddHealth")]
+        private static class ID_AddHealth_Patch
+        {
+
+            private static void Postfix(ID __instance)
+            {
+                if (!__instance.canaddhealth)
+                {
+                    return;
+                }
+                if (__instance.damageSource)
+                {
+                    if (__instance.damageSource.GetComponent<ID>() == Player.code._ID)
+                    {
+                        return;
+                    }
+                    var customization = __instance.GetComponent<CharacterCustomization>();
+                    if (!customization) return;
+                    var companion = customization.GetComponent<Companion>();
+                    if (!companion) return;
+
+                    //随从受伤
+                    if (companion.charge)
+                    {
+                        companion.target = __instance.damageSource;
+                        BepInExPlugin.Dbgl(companion.name + " change target", true);
+                    }
+                    if (__instance.health > 0 && (__instance.health / __instance.maxHealth) < 0.1f)
+                    {
+                        //TODO 逃跑
+                        //随从受伤
+                        Global.code.uiCombat.AddPrompt(companion.name + ":Help me!");
+                    }
+                }
+            }
+
+        }
 
         [HarmonyPatch(typeof(Global), "CommandGoThereAndStand")]
         private static class Global_CommandGoThereAndStand_Patch
@@ -123,7 +160,8 @@ namespace FixPatch
                                     component2.charge = false;
                                 }
                                 var charactor = transform.GetComponent<CharacterCustomization>();
-                                if (charactor) {
+                                if (charactor)
+                                {
                                     charactor.Block();
                                 }
                             }
@@ -352,8 +390,9 @@ namespace FixPatch
                 return true;
             }
 
-            private static void RandomMove(Companion companion, Vector3 loc) { 
-            
+            private static void RandomMove(Companion companion, Vector3 loc)
+            {
+
             }
         }
     }
