@@ -326,7 +326,7 @@ namespace FixPatch
                                 return false;
                             }
                         }
-                        if (sStatus == CompanionCmd.GoThereAndStand)
+                        if (sStatus == CompanionCmd.GoThereAndStand || sStatus == CompanionCmd.FollowMe)
                         {
                             //防守模式
                             if (__instance.curEnemyDist >= __instance.attackDist)
@@ -340,12 +340,18 @@ namespace FixPatch
                                 {
                                     if (__instance.movingToTarget)
                                     {
-                                        //取消防御
-                                        charactor.Unblock();
+                                        if (sStatus != CompanionCmd.FollowMe)
+                                        {
+                                            //取消防御
+                                            charactor.Unblock();
+                                        }
                                         //随机移动
                                         RandomMove(__instance, __instance.movingToTarget.position);
                                     }
-                                    charactor.Block();
+                                    if (sStatus != CompanionCmd.FollowMe)
+                                    {
+                                        charactor.Block();
+                                    }
                                 }
                                 return false;
                             }
