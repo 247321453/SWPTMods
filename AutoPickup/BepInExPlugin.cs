@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace AutoPickup
 {
-    [BepInPlugin("caicai.AutoPickup", "Auto Pickup", "0.0.4")]
+    [BepInPlugin("caicai.AutoPickup", "Auto Pickup", "0.0.5")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -23,6 +23,8 @@ namespace AutoPickup
         public static ConfigEntry<int> filterRarity;
 
         public static ConfigEntry<KeyCode> filterHotKey;
+
+        public static ConfigEntry<int> nexusID;
 
         public static ConfigEntry<string> onlyGoldAndCrystalsEnableStr;
         public static ConfigEntry<string> onlyGoldAndCrystalsDisableStr;
@@ -41,6 +43,7 @@ namespace AutoPickup
             BepInExPlugin.context = this;
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
+            BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 25, "Nexus mod ID for updates");
             BepInExPlugin.hotKey = base.Config.Bind<KeyCode>("Options", "HotKey", KeyCode.A, "left Ctrl + hotkey to toggle pick up all items.");
             BepInExPlugin.filterRarity = base.Config.Bind<int>("Options", "FilterRarity", 2, "Default: Blue, Whilte:1, Blue:2, Yellow:3 Green:4 Red:5 Cyan:6   [hotKey:left ctrl+1~6]");
             BepInExPlugin.isOnlyGoldAndCrystals = base.Config.Bind<bool>("Options", "isOnlyGoldAndCrystals", true, "only auto pickup golds and crystals.");

@@ -2,20 +2,29 @@
 using BepInEx.Configuration;
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace FixPatch
 {
-    [BepInPlugin("caicai.FixPatch", "AI Patch", "0.0.1")]
+    [BepInPlugin("caicai.FixPatch", "Unofficial Patch", "0.0.3")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
 
         public static ConfigEntry<bool> modEnabled;
 
+        public static ConfigEntry<int> nexusID;
+
         public static ConfigEntry<bool> isDebug;
+
+        public static ConfigEntry<bool> isFixAffixes;
+
+        public static ConfigEntry<bool> elementDamageEnable;
+
+        public static ConfigEntry<float> elementDamageRate;
 
         private enum CompanionCmd
         {
@@ -40,40 +49,150 @@ namespace FixPatch
             BepInExPlugin.context = this;
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
+            BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 29, "Nexus mod ID for updates");
+
+            BepInExPlugin.elementDamageEnable = base.Config.Bind<bool>("Options", "ElementDamageEnable", true, "Enable elemental damage of weapon");
+            BepInExPlugin.elementDamageRate = base.Config.Bind<float>("Options", "ElementDamageRate", 0.1f, "magic attributes can increase the elemental damage of weapons");
+            BepInExPlugin.isFixAffixes = base.Config.Bind<bool>("Options", "IsFixAffixes", true, "fix weapon and armor 's affixes.");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Dbgl("Plugin awake", true);
         }
 
-        #region old
-        // 在所有插件全部启动完成后会调用Start()方法，执行顺序在Awake()后面；
-        //    private void Start()
-        //    {
-        //        //Debug.Log("这里是Start()方法中的内容!");
-        //    }
-        // 插件启动后会一直循环执行Update()方法，可用于监听事件或判断键盘按键，执行顺序在Start()后面
-        //  private void Update()
-        //   {
-        // var key = new BepInEx.Configuration.KeyboardShortcut(KeyCode.F9);
-        // if (key.IsDown())
-        //{
-        //     Debug.Log("这里是Updatet()方法中的内容，你看到这条消息是因为你按下了F9");
-        // }
-        //  }
-        // 在插件关闭时会调用OnDestroy()方法
-        // private void OnDestroy()
-        //{
-        //     //Debug.Log("当你看到这条消息时，就表示我已经被关闭一次了!");
-        // }
-        #endregion
-        /*     [HarmonyPatch(typeof(ID), "AddExp")]
-             private static class ID_AddExp_Patch
-             {
-                 private static void Prefix(ID __instance, int exp)
-                 {
-                     Dbgl(__instance.name + ".AddExp(" + exp+")");
-                 }
-             }
-        */
+        private static void FixAffixes(List<Transform> items)
+        {
+            foreach (var it in items)
+            {
+                var item = it.GetComponent<Item>();
+                if (item.name == "Thor's")
+                {
+                    if (item.lighteningDamage == 0)
+                    {
+                        item.lighteningDamage = 28;
+                        item.coldDamage = 0;
+                    }
+                }
+                else if (item.name == "Discharging")
+                {
+                    if (item.lighteningDamage == 0)
+                    {
+                        item.lighteningDamage = 22;
+                        item.coldDamage = 0;
+                    }
+                }
+                //else if (item.name == "Glowing")
+                //{
+                //    item.lighteningDamage = 11;
+                //}
+                // else if (item.name == "Shocking") {
+                //    item.lighteningDamage = 7;
+                // }
+                // else if (item.name == "Sparking")
+                // {
+                //     item.lighteningDamage = 3;
+                // }
+            }
+        }
+
+        [HarmonyPatch(typeof(RM), "LoadResources")]
+        private static class RM_LoadResources_Patch
+        {
+            private static void Postfix(RM __instance)
+            {
+                if (BepInExPlugin.isFixAffixes.Value)
+                {
+                    FixAffixes(__instance.allAffixes.items);
+                    FixAffixes(__instance.weaponSurfixes.items);
+                    FixAffixes(__instance.armorSurfixes.items);
+                }
+            }
+        }
+
+
+        [HarmonyPatch(typeof(Weapon), "DealDamage")]
+        private static class Weapon_DealDamage_Patch
+        {
+
+            private static float GetRealDamage(ID component, float dmg, float resist) {
+                //魔法属性
+                dmg *= (1.0f + (float)component.power * BepInExPlugin.elementDamageRate.Value);
+                if (dmg > 0 && dmg > resist)
+                {
+                    return (dmg - resist);
+                }
+                return 0f;
+            }
+
+            private static float GetAddDamage(Item item, ID component, ID component2) {
+                float addDamage = 0;
+                addDamage += GetRealDamage(component, component.fireDamage, component2.fireResist);
+                addDamage += GetRealDamage(component, component.coldDamage, component2.coldResist);
+                addDamage += GetRealDamage(component, component.lighteningDamage, component2.lighteningResist);
+                addDamage += GetRealDamage(component, component.poisonDamage, component2.poisonResist);
+                switch (item.rarity)
+                {
+                    case Rarity.one:
+                        break;
+                    case Rarity.two:
+                        addDamage *= 1.1f;
+                        break;
+                    case Rarity.three:
+                        addDamage *= 1.2f;
+                        break;
+                    case Rarity.four:
+                        addDamage *= 1.3f;
+                        break;
+                    case Rarity.five:
+                        addDamage *= 1.5f;
+                        break;
+                    case Rarity.six:
+                        addDamage *= 1.8f;
+                        break;
+                }
+                return addDamage;
+            }
+
+            private static void Prefix(Weapon __instance, Bodypart bodypart, float multiplier, bool playStaggerAnimation)
+            {
+                if (BepInExPlugin.isFixAffixes.Value && BepInExPlugin.elementDamageEnable.Value)
+                {
+                    Item item = __instance.GetComponent<Item>();
+                    if (item)
+                    {
+                        ID component = item.owner.GetComponent<ID>();
+                        ID component2 = bodypart.root.GetComponent<ID>();
+                        float old = component.damage;
+                        float addDamage = GetAddDamage(item, component, component2);
+                        if (addDamage > 0)
+                        {
+                            addDamage *= multiplier;
+                            component.damage += addDamage;
+                        }
+                        BepInExPlugin.Dbgl("before DealDamage" + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
+                    }
+                }
+            }
+            private static void Postfix(Weapon __instance, Bodypart bodypart, float multiplier, bool playStaggerAnimation)
+            {
+                if (BepInExPlugin.isFixAffixes.Value)
+                {
+                    Item item = __instance.GetComponent<Item>();
+                    if (item)
+                    {
+                        ID component = item.owner.GetComponent<ID>();
+                        ID component2 = bodypart.root.GetComponent<ID>();
+                        float old = component.damage;
+                        float addDamage = GetAddDamage(item, component, component2);
+                        if (addDamage > 0)
+                        {
+                            addDamage *= multiplier;
+                            component.damage -= addDamage;
+                        }
+                        BepInExPlugin.Dbgl("after DealDamage " + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
+                    }
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(ID), "AddHealth")]
         private static class ID_AddHealth_Patch
         {

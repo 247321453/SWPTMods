@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace SharedExperience
 {
-    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.4")]
+    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.5")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -19,6 +19,8 @@ namespace SharedExperience
         public static ConfigEntry<bool> modEnabled;
 
         public static ConfigEntry<bool> isDebug;
+
+        public static ConfigEntry<int> nexusID;
 
         public static ConfigEntry<bool> isShared;
 
@@ -46,8 +48,9 @@ namespace SharedExperience
             BepInExPlugin.context = this;
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
+            BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 23, "Nexus mod ID for updates");
             BepInExPlugin.hotKey = base.Config.Bind<KeyCode>("Options", "HotKey", KeyCode.S, "left Ctrl + hotkey to toggle shared.");
-            BepInExPlugin.isShared = base.Config.Bind<bool>("Options", "IsShared", true, "if `IsShared = true` then killer's exp is (originalExp * (1 - partyExpRate * partyCount))");
+            BepInExPlugin.isShared = base.Config.Bind<bool>("Options", "IsShared", true, "If it is true, the teammate’s experience is obtained from the killing experience. Otherwise, the teammate’s experience is an additional increase and does not affect the killer’s experience. ");
             BepInExPlugin.partyExpRate = base.Config.Bind<float>("Options", "PartyExpRate", 0.1f, "party members add exp rate");
             BepInExPlugin.sharedEnableStr = base.Config.Bind<string>("Options", "EnableTip", "Shared EXP Open", "isShared=true");
             BepInExPlugin.sharedDisableStr = base.Config.Bind<string>("Options", "DisableTip", "Shared EXP Close", "isShared=false");

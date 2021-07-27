@@ -9,13 +9,13 @@ using System.IO;
 
 namespace EnhanceEquip
 {
-    [BepInPlugin("caicai.EnhanceEquip", "Enhance Equip", "0.0.4")]
+    [BepInPlugin("caicai.EnhanceEquip", "Enhance Equip", "0.0.6")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
 
         public static ConfigEntry<bool> modEnabled;
-
+        public static ConfigEntry<int> nexusID;
         public static ConfigEntry<bool> isDebug;
         private static bool sInit = false;
         private static Dictionary<int, string> sLevelDic = new Dictionary<int, string>();
@@ -35,6 +35,7 @@ namespace EnhanceEquip
             BepInExPlugin.context = this;
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
+            BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 28, "Nexus mod ID for updates");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Dbgl("Plugin awake", true);
             Init();
@@ -382,13 +383,18 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                                     }
                                 }
                             }
-                            if (next_prefix || next_surfix)
+                            if (next_prefix != main_item .prefix || next_surfix != main_item.surfix)
                             {
                                 Transform transform = Utility.Instantiate(items[0]);
                                 transform.GetComponent<Item>().prefix = next_prefix;//更新prefix
                                 transform.GetComponent<Item>().surfix = next_surfix;//保持surfix
                                 transform.GetComponent<Item>().damageMod = 0;
                                 transform.GetComponent<Item>().defenceMod = 0;
+                                if (transform.GetComponent<Item>().slotType != main_item.slotType)
+                                {
+                                    BepInExPlugin.Dbgl(main_item.GetName() + " fix slotType", true);
+                                    transform.GetComponent<Item>().slotType = main_item.slotType;
+                                }
                                 RM.code.balancer.GetItemStats(transform, -1);//更新装备数据
 
                                 BepInExPlugin.Dbgl(main_item.GetName() + "'s level=" + main_item.level, true);
