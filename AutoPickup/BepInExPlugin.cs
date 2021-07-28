@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace AutoPickup
 {
-    [BepInPlugin("caicai.AutoPickup", "Auto Pickup", "0.0.5")]
+    [BepInPlugin("caicai.AutoPickup", "Auto Pickup", "0.1.0")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -28,12 +28,11 @@ namespace AutoPickup
 
         public static ConfigEntry<string> onlyGoldAndCrystalsEnableStr;
         public static ConfigEntry<string> onlyGoldAndCrystalsDisableStr;
-        public static void Dbgl(string str = "", bool pref = true)
+        public static void Debug(string str = "", bool pref = true)
         {
-            bool value = BepInExPlugin.isDebug.Value;
-            if (value)
+            if (BepInExPlugin.isDebug.Value)
             {
-                Debug.Log((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
+                UnityEngine.Debug.Log((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
             }
         }
 
@@ -50,7 +49,7 @@ namespace AutoPickup
             BepInExPlugin.onlyGoldAndCrystalsEnableStr = base.Config.Bind<string>("Options", "EnableTip", "Pickup Gold and Crustals", "isOnlyGoldAndCrystals=true");
             BepInExPlugin.onlyGoldAndCrystalsDisableStr = base.Config.Bind<string>("Options", "DisableTip", "Pickup All Items", "isOnlyGoldAndCrystals=false");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
-            BepInExPlugin.Dbgl("Plugin awake", true);
+            BepInExPlugin.Debug("Plugin awake", true);
         }
 
         private void Update()
@@ -59,7 +58,7 @@ namespace AutoPickup
             if (key.IsDown())
             {
                 BepInExPlugin.isOnlyGoldAndCrystals.Value = !BepInExPlugin.isOnlyGoldAndCrystals.Value;
-                BepInExPlugin.Dbgl(string.Format("set isOnlyGoldAndCrystals: {0}", BepInExPlugin.isOnlyGoldAndCrystals.Value), true);
+                BepInExPlugin.Debug(string.Format("set isOnlyGoldAndCrystals: {0}", BepInExPlugin.isOnlyGoldAndCrystals.Value), true);
                 if (Global.code != null && Global.code.uiCombat != null)
                 {
                     if (BepInExPlugin.isOnlyGoldAndCrystals.Value)
@@ -122,64 +121,34 @@ namespace AutoPickup
             }
         }
 
-        #region old
-        // 在所有插件全部启动完成后会调用Start()方法，执行顺序在Awake()后面；
-        //    private void Start()
-        //    {
-        //        //Debug.Log("这里是Start()方法中的内容!");
-        //    }
-        // 插件启动后会一直循环执行Update()方法，可用于监听事件或判断键盘按键，执行顺序在Start()后面
-        //  private void Update()
-        //   {
-        // var key = new BepInEx.Configuration.KeyboardShortcut(KeyCode.F9);
-        // if (key.IsDown())
-        //{
-        //     Debug.Log("这里是Updatet()方法中的内容，你看到这条消息是因为你按下了F9");
-        // }
-        //  }
-        // 在插件关闭时会调用OnDestroy()方法
-        // private void OnDestroy()
-        //{
-        //     //Debug.Log("当你看到这条消息时，就表示我已经被关闭一次了!");
-        // }
-        #endregion
-        /*     [HarmonyPatch(typeof(ID), "AddExp")]
-             private static class ID_AddExp_Patch
-             {
-                 private static void Prefix(ID __instance, int exp)
-                 {
-                     Dbgl(__instance.name + ".AddExp(" + exp+")");
-                 }
-             }
-        */
 
         [HarmonyPatch(typeof(Item), "Drop")]
         private static class Item_Drop_Patch
         {
-            private static void Postfix(Item __instance)
+            private static bool Prefix(Item __instance)
             {
-                bool flag = !BepInExPlugin.modEnabled.Value;
-                if (!flag)
+                if (BepInExPlugin.modEnabled.Value)
                 {
                     if (__instance.itemName == "Crystals" || __instance.itemName == "Gold")
                     {
                         if (Global.code.AddItemToPlayerStorage(__instance.transform, true))
                         {
-                            Debug.Log(__instance.itemName + " auto pick up");
-                            __instance.InitiateInteract();
-                            return;
+                            Debug(__instance.itemName + " auto pick up");
+                            __instance.Pickup();
+                            return false;
                         }
                     }
                     else if (!BepInExPlugin.isOnlyGoldAndCrystals.Value && ((int)__instance.rarity >= BepInExPlugin.filterRarity.Value || isBook(__instance.itemName)))
                     {
                         if (Global.code.AddItemToPlayerStorage(__instance.transform, true))
                         {
-                            Debug.Log(__instance.itemName + " auto pick up, ratity=" + __instance.rarity);
+                            Debug(__instance.itemName + " auto pick up, ratity=" + __instance.rarity);
                             __instance.Pickup();
-                            return;
+                            return false;
                         }
                     }
                 }
+                return true;
             }
         }
 

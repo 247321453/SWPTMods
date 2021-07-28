@@ -9,7 +9,7 @@ using System.IO;
 
 namespace EnhanceEquip
 {
-    [BepInPlugin("caicai.EnhanceEquip", "Enhance Equip", "0.0.7")]
+    [BepInPlugin("caicai.EnhanceEquip", "Enhance Equip", "0.1.0")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -21,12 +21,11 @@ namespace EnhanceEquip
         private static bool sInit = false;
         private static Dictionary<int, string> sLevelDic = new Dictionary<int, string>();
         private static Dictionary<string, int> sLevelNameDic = new Dictionary<string, int>();
-        public static void Dbgl(string str = "", bool pref = true)
+        public static void Debug(string str = "", bool pref = true)
         {
-            bool value = BepInExPlugin.isDebug.Value;
-            if (value)
+            if (BepInExPlugin.isDebug.Value)
             {
-                Debug.Log((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
+                UnityEngine.Debug.Log((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
             }
         }
 
@@ -39,7 +38,7 @@ namespace EnhanceEquip
             BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 28, "Nexus mod ID for updates");
             BepInExPlugin.maxEnchanceStr = Config.Bind<string>("General", "MaxEnchanceStr", "can't enhance equip {}");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
-            BepInExPlugin.Dbgl("Plugin awake", true);
+            BepInExPlugin.Debug("Plugin awake", true);
             Init();
         }
 
@@ -161,7 +160,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
 
             //register(20, "Valkyrie's");// 女武神的
         }
-
+#if DEBUG
         private static bool sPrinted = false;
         private static void PrintAll() {
             if (!sPrinted) {
@@ -209,7 +208,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
 
             }
         }
-
+#endif
         private static bool isArmor(SlotType slotType) {
             return slotType == SlotType.armor || slotType == SlotType.shoes || slotType == SlotType.legging || slotType == SlotType.gloves
                     || slotType == SlotType.helmet;
@@ -225,7 +224,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                 {
                     //获取武器最低级prefix
                     new_prefix = matchLevelAffixes.OrderBy(n => n.GetComponent<Item>().level).First<Transform>().GetComponent<Item>();
-                    BepInExPlugin.Dbgl(item.GetName() + "'s new_prefix is weapon, min=" + new_prefix.name, true);
+                    BepInExPlugin.Debug(item.GetName() + "'s new_prefix is weapon, min=" + new_prefix.name, true);
                 }
             }
             else if (isArmor(item.slotType))
@@ -235,7 +234,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                 {
                     //获取防具最低级prefix
                     new_prefix = matchLevelAffixes.OrderBy(n => n.GetComponent<Item>().level).First<Transform>().GetComponent<Item>();
-                    BepInExPlugin.Dbgl(item.GetName() + "'s new_prefix is armor, min=" + new_prefix.name, true);
+                    BepInExPlugin.Debug(item.GetName() + "'s new_prefix is armor, min=" + new_prefix.name, true);
                 }
             }
             return new_prefix;
@@ -254,7 +253,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                     if (itemWithName2)
                     {
                         next_prefix = itemWithName2.GetComponent<Item>();
-                        BepInExPlugin.Dbgl(item.GetName() + "'s next_prefix is " + next_prefix.name + ", lv=" + item.prefix.level + "->" + next_prefix.level, true);
+                        BepInExPlugin.Debug(item.GetName() + "'s next_prefix is " + next_prefix.name + ", lv=" + item.prefix.level + "->" + next_prefix.level, true);
                     }
                 }
                 else
@@ -267,7 +266,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                 //未知属性
                 if (item.prefix)
                 {
-                    BepInExPlugin.Dbgl(item.GetName() + " don't found prefix level, name=" + item.prefix.name, true);
+                    BepInExPlugin.Debug(item.GetName() + " don't found prefix level, name=" + item.prefix.name, true);
                 }
             }
             return next_prefix;
@@ -279,11 +278,11 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
             int surfixLevel = ToAffixLevel(main.surfix);
             if (surfixLevel > 0)
             {
-                BepInExPlugin.Dbgl(main.GetName() + ", surfixLevel=" + surfixLevel.ToString("X"), true);
+                BepInExPlugin.Debug(main.GetName() + ", surfixLevel=" + surfixLevel.ToString("X"), true);
                 int surfixLevel2 = ToAffixLevel(sel.surfix);
                 if ((surfixLevel & 0xf0) == (surfixLevel2 & 0xf0))
                 {
-                    BepInExPlugin.Dbgl(main.GetName() + ", surfixLevel2=" + surfixLevel2.ToString("X"), true);
+                    BepInExPlugin.Debug(main.GetName() + ", surfixLevel2=" + surfixLevel2.ToString("X"), true);
                     //直接取最大？
                     //if (surfixLevel2 > surfixLevel) {
                     //    next_surfix = sel_item.surfix;
@@ -296,7 +295,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                         if (itemWithName2)
                         {
                             next_surfix = itemWithName2.GetComponent<Item>();
-                            BepInExPlugin.Dbgl(main.GetName() + "'s next_surfix is " + next_surfix.name + ", lv=" + main.surfix.level + "->" + next_surfix.level, true);
+                            BepInExPlugin.Debug(main.GetName() + "'s next_surfix is " + next_surfix.name + ", lv=" + main.surfix.level + "->" + next_surfix.level, true);
                         }
                     }
                     else
@@ -307,7 +306,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                 else
                 {
                     //保留原始属性
-                    BepInExPlugin.Dbgl("surfixLevel=" + surfixLevel.ToString("X") + ", surfixLevel2=" + surfixLevel2.ToString("X"), true);
+                    BepInExPlugin.Debug("surfixLevel=" + surfixLevel.ToString("X") + ", surfixLevel2=" + surfixLevel2.ToString("X"), true);
                 }
             }
             else
@@ -315,7 +314,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                 //未知属性
                 if (main.surfix)
                 {
-                    BepInExPlugin.Dbgl("unknown surfix=[" + main.surfix.name + "]", true);
+                    BepInExPlugin.Debug("unknown surfix=[" + main.surfix.name + "]", true);
                 }
             }
             return next_surfix;
@@ -326,8 +325,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
         {
             private static bool Prefix(ItemIcon __instance)
             {
-                bool flag = !BepInExPlugin.modEnabled.Value;
-                if (!flag)
+                if (BepInExPlugin.modEnabled.Value)
                 {
                     if (Input.GetMouseButton(1))
                     {
@@ -341,7 +339,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                     //PrintAll();
                     var vec = __instance.item.GetComponent<Item>().occupliedSlots[0].vec;
                     var items = __instance.inventory.storage.GetZoneItems(Global.code.selectedItem, vec).items;
-                    BepInExPlugin.Dbgl("items:" + items.Count, true);
+                    BepInExPlugin.Debug("items:" + items.Count, true);
                     if (items.Count == 1)
                     {
                         var main_item = items[0].GetComponent<Item>();//目标
@@ -375,7 +373,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                                         if (itemWithName2)
                                         {
                                             next_surfix = itemWithName2.GetComponent<Item>();
-                                            BepInExPlugin.Dbgl(main_item.GetName() + "'s next_surfix is " + next_surfix.name + ", lv=" + sel_item.surfix.level + "->" + next_surfix.level, true);
+                                            BepInExPlugin.Debug(main_item.GetName() + "'s next_surfix is " + next_surfix.name + ", lv=" + sel_item.surfix.level + "->" + next_surfix.level, true);
                                         }
                                     }
                                     else
@@ -394,12 +392,12 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                                 transform.GetComponent<Item>().defenceMod = 0;
                                 if (transform.GetComponent<Item>().slotType != main_item.slotType)
                                 {
-                                    BepInExPlugin.Dbgl(main_item.GetName() + " fix slotType", true);
+                                    BepInExPlugin.Debug(main_item.GetName() + " fix slotType", true);
                                     transform.GetComponent<Item>().slotType = main_item.slotType;
                                 }
                                 RM.code.balancer.GetItemStats(transform, -1);//更新装备数据
 
-                                BepInExPlugin.Dbgl(main_item.GetName() + "'s level=" + main_item.level, true);
+                                BepInExPlugin.Debug(main_item.GetName() + "'s level=" + main_item.level, true);
                                 Global.code.selectedItem = null;
                                 //移除旧物品
                                 __instance.inventory.storage.RemoveItem(items[0]);

@@ -12,7 +12,7 @@ using UnityEngine.UI;
 
 namespace FixPatch
 {
-    [BepInPlugin("caicai.FixPatch", "Fix Patch", "0.0.6")]
+    [BepInPlugin("caicai.FixPatch", "Fix Patch", "0.1.0")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -46,17 +46,16 @@ namespace FixPatch
         }
         private static CompanionCmd sStatus = CompanionCmd.FollowMe;
 
-        public static void Dbgl(string str = "", bool pref = true)
+        public static void Debug(string str = "", bool pref = true)
         {
-            bool value = BepInExPlugin.isDebug.Value;
-            if (value)
+            if (BepInExPlugin.isDebug.Value)
             {
-                Debug.Log((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
+                UnityEngine.Debug.Log((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
             }
         }
         public static void Error(string str = "", bool pref = true)
         {
-            Debug.LogError((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
+            UnityEngine.Debug.LogError((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
         }
         private static List<string> missTextKeys = new List<string>();
         // 在插件启动时会直接调用Awake()方法
@@ -78,7 +77,7 @@ namespace FixPatch
             BepInExPlugin.reloadLocalizetionHotKey = base.Config.Bind<KeyCode>("Options", "ReloadLocalizetionHotKey", KeyCode.L, "left Ctrl + hotkey to reload localizetion txt");
             BepInExPlugin.saveMissLocalizetionHotKey = base.Config.Bind<KeyCode>("Options", "SaveMissLocalizetionHotKey", KeyCode.D, "left Ctrl + hotkey to save miss_localizetion txt");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
-            BepInExPlugin.Dbgl("Plugin awake", true);
+            BepInExPlugin.Debug("Plugin awake", true);
         }
 
         private void Update()
@@ -289,7 +288,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
 
             private static void Prefix(Weapon __instance, Bodypart bodypart, float multiplier, bool playStaggerAnimation)
             {
-                if (BepInExPlugin.isFixAffixes.Value && BepInExPlugin.elementDamageEnable.Value)
+                if (BepInExPlugin.elementDamageEnable.Value)
                 {
                     Item item = __instance.GetComponent<Item>();
                     if (item)
@@ -303,13 +302,13 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                             addDamage *= multiplier;
                             component.damage += addDamage;
                         }
-                        BepInExPlugin.Dbgl("before DealDamage" + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
+                        BepInExPlugin.Debug("before DealDamage" + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
                     }
                 }
             }
             private static void Postfix(Weapon __instance, Bodypart bodypart, float multiplier, bool playStaggerAnimation)
             {
-                if (BepInExPlugin.isFixAffixes.Value)
+                if (BepInExPlugin.elementDamageEnable.Value)
                 {
                     Item item = __instance.GetComponent<Item>();
                     if (item)
@@ -323,7 +322,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                             addDamage *= multiplier;
                             component.damage -= addDamage;
                         }
-                        BepInExPlugin.Dbgl("after DealDamage " + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
+                        BepInExPlugin.Debug("after DealDamage " + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
                     }
                 }
             }
@@ -364,7 +363,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                     if (companion.charge)
                     {
                         companion.target = __instance.damageSource;
-                        BepInExPlugin.Dbgl(companion.name + " change target", true);
+                        BepInExPlugin.Debug(companion.name + " change target", true);
                     }
                     if (__instance.health > 0 && (__instance.health / __instance.maxHealth) < 0.1f)
                     {
@@ -402,12 +401,12 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                     {
                         if (transform && transform != Player.code.transform)
                         {
-                            Dbgl("CommandGoThereAndStand:transform");
+                            Debug("CommandGoThereAndStand:transform");
                             var component = transform.GetComponent<Companion>();
                             var component2 = transform.GetComponent<Monster>();
                             if (component)
                             {
-                                Dbgl("CommandGoThereAndStand:Companion:"+component.name);
+                                Debug("CommandGoThereAndStand:Companion:" + component.name);
                                 component.target = null;
                                 component.movingToTarget = new GameObject
                                 {
@@ -428,7 +427,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                             }
                             if (component2)
                             {
-                                Dbgl("CommandGoThereAndStand:Monster:" + component.name);
+                                Debug("CommandGoThereAndStand:Monster:" + component.name);
                                 component2.target = null;
                                 component2.movingToTarget = new GameObject
                                 {
@@ -447,7 +446,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                 }
                 catch (Exception e)
                 {
-                    Error("CommandGoThereAndStand\n" + e.Message + "\n" + e.StackTrace+"\n"+e.Source);
+                    Error("CommandGoThereAndStand\n" + e.Message + "\n" + e.StackTrace + "\n" + e.Source);
                 }
                 __instance.uiCombat.AddPrompt(Localization.GetContent("GetThereAndStand"));
                 return false;
@@ -459,12 +458,8 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
         {
             private static void Prefix(Global __instance)
             {
-                if (BepInExPlugin.modEnabled.Value)
+                if (BepInExPlugin.modEnabled.Value && BepInExPlugin.isFixAI.Value)
                 {
-                    if (!BepInExPlugin.isFixAI.Value)
-                    {
-                        return;
-                    }
                     sStatus = CompanionCmd.Charge;
                 }
             }
@@ -475,30 +470,32 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
         {
             private static void Prefix(Global __instance)
             {
-                if (BepInExPlugin.modEnabled.Value)
+                if (!BepInExPlugin.modEnabled.Value)
                 {
-                    if (!BepInExPlugin.isFixAI.Value)
+                    return;
+                }
+                if (!BepInExPlugin.isFixAI.Value)
+                {
+                    return;
+                }
+                sStatus = CompanionCmd.FollowMe;
+                if (__instance.friendlies == null)
+                {
+                    return;
+                }
+                foreach (Transform transform in __instance.friendlies.items)
+                {
+                    if (transform && transform != Player.code.transform)
                     {
-                        return;
-                    }
-                    sStatus = CompanionCmd.FollowMe;
-                    if (__instance.friendlies == null) {
-                        return;
-                    }
-                    foreach (Transform transform in __instance.friendlies.items)
-                    {
-                        if (transform && transform != Player.code.transform)
+                        Companion component = transform.GetComponent<Companion>();
+                        Monster component2 = transform.GetComponent<Monster>();
+                        if (component)
                         {
-                            Companion component = transform.GetComponent<Companion>();
-                            Monster component2 = transform.GetComponent<Monster>();
-                            if (component)
-                            {
-                                component.target = null;
-                            }
-                            if (component2)
-                            {
-                                component2.target = null;
-                            }
+                            component.target = null;
+                        }
+                        if (component2)
+                        {
+                            component2.target = null;
                         }
                     }
                 }
@@ -628,7 +625,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                             //防守模式
                             if (__instance.curEnemyDist >= __instance.attackDist)
                             {
-                                BepInExPlugin.Dbgl("status is GoThereAndStand, curEnemyDist=" + __instance.curEnemyDist + ", attackDist=" + __instance.attackDist, true);
+                                BepInExPlugin.Debug("status is GoThereAndStand, curEnemyDist=" + __instance.curEnemyDist + ", attackDist=" + __instance.attackDist, true);
                                 //敌人太远了
                                 __instance.target = null;
                                 EnemyFarRef.Invoke(__instance, new object[0]);
@@ -691,7 +688,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                 }
                 catch (Exception e)
                 {
-                    Error("CS\n" + e.Message + "\n" + e.StackTrace+"\n"+e.Source);
+                    Error("CS\n" + e.Message + "\n" + e.StackTrace + "\n" + e.Source);
                     return true;
                 }
                 return false;
@@ -705,13 +702,17 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
         #endregion
 
         #region language
-        private static bool IsNumber(string str) {
-            if (string.IsNullOrEmpty(str)) {
+        private static bool IsNumber(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
                 return false;
             }
             char[] cs = str.ToCharArray();
-            foreach (char c in cs) {
-                if (c < '0' && c > '9' && c != '.') {
+            foreach (char c in cs)
+            {
+                if (c < '0' && c > '9' && c != '.')
+                {
                     return false;
                 }
             }
@@ -721,7 +722,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
         private static bool sInit = false;
         private static Dictionary<string, List<string>> LocalizationDic = new Dictionary<string, List<string>>();
 
-        private static void InitLocalizetionText(bool force=false)
+        private static void InitLocalizetionText(bool force = false)
         {
             if (!force)
             {
@@ -732,7 +733,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
             }
             sInit = true;
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Localization.txt");
-            BepInExPlugin.Dbgl("read " + path, true);
+            BepInExPlugin.Debug("read " + path, true);
             Dictionary<string, Table_Localization> LocalizationData = new Dictionary<string, Table_Localization>();
             try
             {
@@ -742,7 +743,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                     LocalizationData = TableManager.DeserializeStringTODIc<string, Table_Localization>(json);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Error("read Localization error:" + path);
                 Error(e.Message);
@@ -751,10 +752,10 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
             }
             if (LocalizationData == null)
             {
-                BepInExPlugin.Dbgl("read Localization to json error:" + path);
+                BepInExPlugin.Debug("read Localization to json error:" + path);
                 return;
             }
-            BepInExPlugin.Dbgl("read localization success!", true);
+            BepInExPlugin.Debug("read localization success!", true);
             if (force)
             {
                 LocalizationDic.Clear();
@@ -770,7 +771,8 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                         keyValuePair.Value.RUSSIAN
                     });
                 }
-                else {
+                else
+                {
                     Error("exist key:" + keyValuePair.Key);
                 }
             }
@@ -836,24 +838,24 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
         {
             private static bool Prefix(string _KEY, object[] pars, ref string __result)
             {
-                if (BepInExPlugin.modEnabled.Value)
+                if (!BepInExPlugin.modEnabled.Value)
                 {
-                    List<string> list;
-                    if (LocalizationDic.TryGetValue(_KEY, out list))
-                    {
-                        __result = GetContentLocal(list, _KEY, pars);
-                        return false;
-                    }
-                    if (BepInExPlugin.LocalizetionHotkeyEnable.Value)
-                    {
-                        if (!IsNumber(_KEY) && !missTextKeys.Contains(_KEY))
-                        {
-                            missTextKeys.Add(_KEY);
-                        }
-                    }
-                    //按照原始读法
                     return true;
                 }
+                List<string> list;
+                if (LocalizationDic.TryGetValue(_KEY, out list))
+                {
+                    __result = GetContentLocal(list, _KEY, pars);
+                    return false;
+                }
+                if (BepInExPlugin.LocalizetionHotkeyEnable.Value)
+                {
+                    if (!IsNumber(_KEY) && !missTextKeys.Contains(_KEY))
+                    {
+                        missTextKeys.Add(_KEY);
+                    }
+                }
+                //按照原始读法
                 return true;
             }
         }

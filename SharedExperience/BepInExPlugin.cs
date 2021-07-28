@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace SharedExperience
 {
-    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.6")]
+    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.1.0")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -33,12 +33,11 @@ namespace SharedExperience
         public static ConfigEntry<string> keepKillerExpEnableStr;
         public static ConfigEntry<string> keepKillerExpDisableStr;
 
-        public static void Dbgl(string str = "", bool pref = true)
+        public static void Debug(string str = "", bool pref = true)
         {
-            bool value = BepInExPlugin.isDebug.Value;
-            if (value)
+            if (BepInExPlugin.isDebug.Value)
             {
-                Debug.Log((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
+                UnityEngine.Debug.Log((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
             }
         }
 
@@ -55,7 +54,7 @@ namespace SharedExperience
             BepInExPlugin.keepKillerExpEnableStr = base.Config.Bind<string>("Options", "KeepKillerExpEnableStr", "Keep killer exp Open", "KeepKillerExp=true");
             BepInExPlugin.keepKillerExpDisableStr = base.Config.Bind<string>("Options", "KeepKillerExpDisableStr", "Keep killer exp Close", "KeepKillerExp=false");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
-            BepInExPlugin.Dbgl("Plugin awake", true);
+            BepInExPlugin.Debug("Plugin awake", true);
         }
 
         private void Update()
@@ -64,7 +63,7 @@ namespace SharedExperience
             if (key.IsDown())
             {
                 BepInExPlugin.keepKillerExp.Value = !BepInExPlugin.keepKillerExp.Value;
-                BepInExPlugin.Dbgl(string.Format("set exp share: {0}", BepInExPlugin.keepKillerExp.Value), true);
+                BepInExPlugin.Debug(string.Format("set exp share: {0}", BepInExPlugin.keepKillerExp.Value), true);
                 if (Global.code != null && Global.code.uiCombat != null)
                 {
                     if (BepInExPlugin.keepKillerExp.Value)
@@ -79,24 +78,12 @@ namespace SharedExperience
             }
         }
 
-        #region old
-        #endregion
-        /*[HarmonyPatch(typeof(ID), "AddExp")]
-        private static class ID_AddExp_Patch
-        {
-            private static void Prefix(ID __instance, int exp)
-            {
-                Dbgl(__instance.name + ".AddExp(" + exp + ")");
-            }
-        }
-        */
-
         [HarmonyPatch(typeof(Monster), "Die")]
         private static class Monster_Die_Patch
         {
             private static void Prefix(Monster __instance)
             {
-                if (!BepInExPlugin.modEnabled.Value)
+                if (BepInExPlugin.modEnabled.Value)
                 {
                     if (__instance.gameObject.tag == "D")
                     {
@@ -124,7 +111,7 @@ namespace SharedExperience
                         if (exp > 0)
                         {
                             var player_id = Player.code._ID;
-                            Dbgl(killer.name + " kill monster, is player=" + (killer == player_id) + ", all exp=" + num + ", share exp=" + exp);
+                            Debug(killer.name + " kill monster, is player=" + (killer == player_id) + ", all exp=" + num + ", share exp=" + exp);
                             //killer.AddExp(num);
                             foreach (Transform transform in Global.code.playerCombatParty.items)
                             {
@@ -133,7 +120,7 @@ namespace SharedExperience
                                     var comp = transform.GetComponent<ID>();
                                     if (comp && comp != killer && comp.health > 0)
                                     {
-                                        Dbgl("team kill monster, add exp " + exp + " to " + comp.name);
+                                        Debug("team kill monster, add exp " + exp + " to " + comp.name);
                                         if (exp > num)
                                         {
                                             //留给击杀者
@@ -155,7 +142,7 @@ namespace SharedExperience
                             {
                                 if (player_id.health > 0)
                                 {
-                                    Dbgl("team kill monster, player add exp:" + exp);
+                                    Debug("team kill monster, player add exp:" + exp);
                                     if (exp < num)
                                     {
                                         player_id.AddExp(exp);
@@ -164,7 +151,7 @@ namespace SharedExperience
                                 }
                                 else
                                 {
-                                    Dbgl("team kill monster, player is dead, ignore exp:" + exp);
+                                    Debug("team kill monster, player is dead, ignore exp:" + exp);
                                 }
                             }
                         }
@@ -178,7 +165,7 @@ namespace SharedExperience
 
                             killer.AddExp(num);
                             __instance._ID.damageSource = null;
-                            Dbgl("killer:"+killer.name + " add exp " + num);
+                            Debug("killer:"+killer.name + " add exp " + num);
 
                             #region orgi code
                             Global.code.uiAchievements.AddPoint(AchievementType.totalkills, 1);
