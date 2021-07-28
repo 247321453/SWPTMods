@@ -28,6 +28,15 @@ namespace AutoPickup
 
         public static ConfigEntry<string> onlyGoldAndCrystalsEnableStr;
         public static ConfigEntry<string> onlyGoldAndCrystalsDisableStr;
+
+
+        public static ConfigEntry<string> FilterWhilteStr;
+        public static ConfigEntry<string> FilterBlueStr;
+        public static ConfigEntry<string> FilterYellowStr;
+        public static ConfigEntry<string> FilterGreenStr;
+        public static ConfigEntry<string> FilterRedStr;
+        public static ConfigEntry<string> FilterCyanStr;
+
         public static void Debug(string str = "", bool pref = true)
         {
             if (BepInExPlugin.isDebug.Value)
@@ -48,6 +57,14 @@ namespace AutoPickup
             BepInExPlugin.isOnlyGoldAndCrystals = base.Config.Bind<bool>("Options", "isOnlyGoldAndCrystals", true, "only auto pickup golds and crystals.");
             BepInExPlugin.onlyGoldAndCrystalsEnableStr = base.Config.Bind<string>("Options", "EnableTip", "Pickup Gold and Crustals", "isOnlyGoldAndCrystals=true");
             BepInExPlugin.onlyGoldAndCrystalsDisableStr = base.Config.Bind<string>("Options", "DisableTip", "Pickup All Items", "isOnlyGoldAndCrystals=false");
+
+            BepInExPlugin.FilterWhilteStr = base.Config.Bind<string>("Language", "FilterWhilteStr", "Filter Whilte", "Filter:White");
+            BepInExPlugin.FilterBlueStr = base.Config.Bind<string>("Language", "FilterBlueStr", "Filter Blue", "Filter:Blue");
+            BepInExPlugin.FilterYellowStr = base.Config.Bind<string>("Language", "FilterYellowStr", "Filter Yellow", "Filter:Yellow");
+            BepInExPlugin.FilterGreenStr = base.Config.Bind<string>("Language", "FilterGreenStr", "Filter Green", "Filter:Green");
+            BepInExPlugin.FilterRedStr = base.Config.Bind<string>("Language", "FilterRedStr", "Filter Red", "Filter:Red");
+            BepInExPlugin.FilterCyanStr = base.Config.Bind<string>("Language", "FilterCyanStr", "Filter Cyan", "Filter:Cyan");
+
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Debug("Plugin awake", true);
         }
@@ -76,7 +93,7 @@ namespace AutoPickup
                 BepInExPlugin.filterRarity.Value = 1;
                 if (Global.code != null && Global.code.uiCombat != null)
                 {
-                    Global.code.uiCombat.AddRollHint("Filter:Whilte", Color.white);
+                    Global.code.uiCombat.AddRollHint(BepInExPlugin.FilterWhilteStr.Value, Color.white);
                 }
             }
             else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha2, KeyCode.LeftControl).IsDown())
@@ -84,7 +101,7 @@ namespace AutoPickup
                 BepInExPlugin.filterRarity.Value = 2;
                 if (Global.code != null && Global.code.uiCombat != null)
                 {
-                    Global.code.uiCombat.AddRollHint("Filter:Blue", Color.white);
+                    Global.code.uiCombat.AddRollHint(BepInExPlugin.FilterWhilteStr.Value, Color.blue);
                 }
             }
             else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha3, KeyCode.LeftControl).IsDown())
@@ -92,7 +109,7 @@ namespace AutoPickup
                 BepInExPlugin.filterRarity.Value = 3;
                 if (Global.code != null && Global.code.uiCombat != null)
                 {
-                    Global.code.uiCombat.AddRollHint("Filter:Yellow", Color.white);
+                    Global.code.uiCombat.AddRollHint(BepInExPlugin.FilterYellowStr.Value, Color.yellow);
                 }
             }
             else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha4, KeyCode.LeftControl).IsDown())
@@ -100,7 +117,7 @@ namespace AutoPickup
                 BepInExPlugin.filterRarity.Value = 4;
                 if (Global.code != null && Global.code.uiCombat != null)
                 {
-                    Global.code.uiCombat.AddRollHint("Filter:Green", Color.white);
+                    Global.code.uiCombat.AddRollHint(BepInExPlugin.FilterGreenStr.Value, Color.green);
                 }
             }
             else if(new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha5, KeyCode.LeftControl).IsDown())
@@ -108,7 +125,7 @@ namespace AutoPickup
                 BepInExPlugin.filterRarity.Value = 5;
                 if (Global.code != null && Global.code.uiCombat != null)
                 {
-                    Global.code.uiCombat.AddRollHint("Filter:Red", Color.white);
+                    Global.code.uiCombat.AddRollHint(BepInExPlugin.FilterRedStr.Value, Color.red);
                 }
             }
             else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha6, KeyCode.LeftControl).IsDown())
@@ -116,7 +133,7 @@ namespace AutoPickup
                 BepInExPlugin.filterRarity.Value = 6;
                 if (Global.code != null && Global.code.uiCombat != null)
                 {
-                    Global.code.uiCombat.AddRollHint("Filter:Cyan", Color.white);
+                    Global.code.uiCombat.AddRollHint(BepInExPlugin.FilterCyanStr.Value, Color.cyan);
                 }
             }
         }

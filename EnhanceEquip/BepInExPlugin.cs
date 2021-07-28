@@ -36,7 +36,7 @@ namespace EnhanceEquip
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
             BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 28, "Nexus mod ID for updates");
-            BepInExPlugin.maxEnchanceStr = Config.Bind<string>("General", "MaxEnchanceStr", "can't enhance equip {}");
+            BepInExPlugin.maxEnchanceStr = Config.Bind<string>("General", "MaxEnchanceStr", "this equip is not change.");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Debug("Plugin awake", true);
             Init();
@@ -409,7 +409,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                             }
                             else
                             {
-                                Global.code.uiCombat.AddRollHint(string.Format(BepInExPlugin.maxEnchanceStr.Value, main_item.GetName()), Color.red);
+                                Global.code.uiCombat.AddRollHint(BepInExPlugin.maxEnchanceStr.Value, Color.red);
                             }
                         }
                         return true;
