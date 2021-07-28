@@ -53,17 +53,17 @@ namespace AutoPickup
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
             BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 25, "Nexus mod ID for updates");
             BepInExPlugin.hotKey = base.Config.Bind<KeyCode>("Options", "HotKey", KeyCode.A, "left Ctrl + hotkey to toggle pick up all items.");
-            BepInExPlugin.filterRarity = base.Config.Bind<int>("Options", "FilterRarity", 2, "Default: Blue, Whilte:1, Blue:2, Yellow:3 Green:4 Red:5 Cyan:6   [hotKey:left ctrl+1~6]");
+            BepInExPlugin.filterRarity = base.Config.Bind<int>("Options", "FilterRarity", 2, "Default: Blue, Common:1, Rare:2, Superior:3 Unique:4 Legendary:5 Ultra Legendary:6   [hotKey:left ctrl+1~6]");
             BepInExPlugin.isOnlyGoldAndCrystals = base.Config.Bind<bool>("Options", "isOnlyGoldAndCrystals", true, "only auto pickup golds and crystals.");
             BepInExPlugin.onlyGoldAndCrystalsEnableStr = base.Config.Bind<string>("Options", "EnableTip", "Pickup Gold and Crustals", "isOnlyGoldAndCrystals=true");
             BepInExPlugin.onlyGoldAndCrystalsDisableStr = base.Config.Bind<string>("Options", "DisableTip", "Pickup All Items", "isOnlyGoldAndCrystals=false");
 
-            BepInExPlugin.FilterWhilteStr = base.Config.Bind<string>("Language", "FilterWhilteStr", "Filter Whilte", "Filter:White");
-            BepInExPlugin.FilterBlueStr = base.Config.Bind<string>("Language", "FilterBlueStr", "Filter Blue", "Filter:Blue");
-            BepInExPlugin.FilterYellowStr = base.Config.Bind<string>("Language", "FilterYellowStr", "Filter Yellow", "Filter:Yellow");
-            BepInExPlugin.FilterGreenStr = base.Config.Bind<string>("Language", "FilterGreenStr", "Filter Green", "Filter:Green");
-            BepInExPlugin.FilterRedStr = base.Config.Bind<string>("Language", "FilterRedStr", "Filter Red", "Filter:Red");
-            BepInExPlugin.FilterCyanStr = base.Config.Bind<string>("Language", "FilterCyanStr", "Filter Cyan", "Filter:Cyan");
+            BepInExPlugin.FilterWhilteStr = base.Config.Bind<string>("Language", "FilterWhilteStr", "Filter Common", "Filter:White");
+            BepInExPlugin.FilterBlueStr = base.Config.Bind<string>("Language", "FilterBlueStr", "Filter Rare", "Filter:Blue");
+            BepInExPlugin.FilterYellowStr = base.Config.Bind<string>("Language", "FilterYellowStr", "Filter Superior", "Filter:Yellow");
+            BepInExPlugin.FilterGreenStr = base.Config.Bind<string>("Language", "FilterGreenStr", "Filter Unique", "Filter:Green");
+            BepInExPlugin.FilterRedStr = base.Config.Bind<string>("Language", "FilterRedStr", "Filter Legendary", "Filter:Red");
+            BepInExPlugin.FilterCyanStr = base.Config.Bind<string>("Language", "FilterCyanStr", "Filter Ultra Legendary", "Filter:Cyan");
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Debug("Plugin awake", true);

@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixPatch", "FixPatch\FixPat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnhanceEquip", "EnhanceEquip\EnhanceEquip.csproj", "{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{3AD935E5-049F-4F11-A7F9-80DCB990C2D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanguagePatch", "LanguagePatch\LanguagePatch.csproj", "{4BA03DBF-32A6-42BB-A6B0-E94F39195A3D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC745B9E-84B9-4C6F-8BFB-967C0BB1633E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AD935E5-049F-4F11-A7F9-80DCB990C2D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AD935E5-049F-4F11-A7F9-80DCB990C2D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AD935E5-049F-4F11-A7F9-80DCB990C2D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AD935E5-049F-4F11-A7F9-80DCB990C2D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BA03DBF-32A6-42BB-A6B0-E94F39195A3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BA03DBF-32A6-42BB-A6B0-E94F39195A3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BA03DBF-32A6-42BB-A6B0-E94F39195A3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BA03DBF-32A6-42BB-A6B0-E94F39195A3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
