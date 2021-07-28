@@ -48,7 +48,7 @@ namespace LanguagePatch
             BepInExPlugin.context = this;
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
-            BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 0, "Nexus mod ID for updates");
+            BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 35, "Nexus mod ID for updates");
 
             BepInExPlugin.replaceLocalizetionText = base.Config.Bind<bool>("Options", "ReplaceLocalizetionText", true, "replace localizetion text.");
             BepInExPlugin.LocalizetionHotkeyEnable = base.Config.Bind<bool>("Options", "LocalizetionHotkeyEnable", false, "enable hot key about localizetion.");

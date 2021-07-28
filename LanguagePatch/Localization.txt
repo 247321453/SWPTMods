@@ -149,7 +149,7 @@
   "Black Fused Suit": {
     "ID": 80094,
     "KEY": "Black Fused Suit",
-    "CHINESE": "黑色石英西装",
+    "CHINESE": "黑色网格泳衣",
     "ENGLISH": "Black Fused Suit",
     "RUSSIAN": "Black Fused Suit",
   },
@@ -282,7 +282,7 @@
   "White Fused Suit": {
     "ID": 80113,
     "KEY": "White Fused Suit",
-    "CHINESE": "白色石英西装",
+    "CHINESE": "白色网格泳衣",
     "ENGLISH": "White Fused Suit",
     "RUSSIAN": "White Fused Suit",
   },
