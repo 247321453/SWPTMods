@@ -1,4 +1,46 @@
 {
+    "Defender Legging": {
+    "ID": 80118,
+    "KEY": "Defender Legging",
+    "CHINESE": "防御者护腿",
+    "ENGLISH": "Defender Legging",
+    "RUSSIAN": "Defender Legging",
+  },
+  "AS Teddy Grey": {
+    "ID": 80119,
+    "KEY": "AS Teddy Grey",
+    "CHINESE": "灰色AS连衫衬裤",
+    "ENGLISH": "AS Teddy Grey",
+    "RUSSIAN": "AS Teddy Grey",
+  },
+  "AS Teddy Nude": {
+    "ID": 80120,
+    "KEY": "AS Teddy Nude",
+    "CHINESE": "肉色AS连衫衬裤",
+    "ENGLISH": "AS Teddy Nude",
+    "RUSSIAN": "AS Teddy Nude",
+  },
+  "AS Teddy Red": {
+    "ID": 80121,
+    "KEY": "AS Teddy Red",
+    "CHINESE": "红色AS连衫衬裤",
+    "ENGLISH": "AS Teddy Red",
+    "RUSSIAN": "AS Teddy Red",
+  },
+  "Sensual Lace Panties": {
+    "ID": 80122,
+    "KEY": "Sensual Lace Panties",
+    "CHINESE": "性感蕾丝内裤",
+    "ENGLISH": "Sensual Lace Panties",
+    "RUSSIAN": "Sensual Lace Panties",
+  },
+  "Zealoth_Red_Armor": {
+    "ID": 80123,
+    "KEY": "Zealoth_Red_Armor",
+    "CHINESE": "红色热诚盔甲",
+    "ENGLISH": "Zealoth Red Armor",
+    "RUSSIAN": "Zealoth Red Armor",
+  },
   "Devil Queen Claymore": {
     "ID": 80073,
     "KEY": "Devil Queen Claymore",
@@ -660,7 +702,7 @@
   "X-Fighter RoyalGrey": {
     "ID": 80011,
     "KEY": "X-Fighter RoyalGrey",
-    "CHINESE": "灰色X-斗士皇家靴子",
+    "CHINESE": "灰色X-斗士皇家护甲",
     "ENGLISH": "X-Fighter RoyalGrey",
     "RUSSIAN": "X-Fighter RoyalGrey"
   },

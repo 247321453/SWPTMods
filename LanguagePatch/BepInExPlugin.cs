@@ -147,6 +147,17 @@ namespace LanguagePatch
                     }
                 }
             }
+            foreach (var k in RM.code.allItems.items)
+            {
+                string name = k.GetComponent<Item>().name;
+                if (!LocalizationDic.ContainsKey(name))
+                {
+                    if (!missTextKeys.Contains(name))
+                    {
+                        missTextKeys.Add(name);
+                    }
+                }
+            }
             int count = missTextKeys.Count;
             sMaxID++;
             foreach (string k in missTextKeys)
