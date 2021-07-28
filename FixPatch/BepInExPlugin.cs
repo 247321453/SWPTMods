@@ -12,7 +12,7 @@ using UnityEngine.UI;
 
 namespace FixPatch
 {
-    [BepInPlugin("caicai.FixPatch", "Unofficial Patch", "0.0.5")]
+    [BepInPlugin("caicai.FixPatch", "Fix Patch", "0.0.6")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -35,6 +35,9 @@ namespace FixPatch
 
         public static ConfigEntry<bool> replaceLocalizetionText;
 
+        public static ConfigEntry<bool> LocalizetionHotkeyEnable;
+        public static ConfigEntry<KeyCode> reloadLocalizetionHotKey;
+        public static ConfigEntry<KeyCode> saveMissLocalizetionHotKey;
         private enum CompanionCmd
         {
             FollowMe,
@@ -55,7 +58,7 @@ namespace FixPatch
         {
             Debug.LogError((pref ? (typeof(BepInExPlugin).Namespace + " ") : "") + str);
         }
-
+        private static List<string> missTextKeys = new List<string>();
         // 在插件启动时会直接调用Awake()方法
         private void Awake()
         {
@@ -67,12 +70,47 @@ namespace FixPatch
             BepInExPlugin.elementDamageEnable = base.Config.Bind<bool>("Options", "ElementDamageEnable", true, "Enable elemental damage of weapon");
             BepInExPlugin.elementDamageRate = base.Config.Bind<float>("Options", "ElementDamageRate", 0.1f, "magic attributes can increase the elemental damage of weapons");
             BepInExPlugin.isFixAffixes = base.Config.Bind<bool>("Options", "IsFixAffixes", true, "fix weapon and armor 's affixes.");
-            BepInExPlugin.isFixBugs = base.Config.Bind<bool>("Options", "IsFixBugs", true, "fix some bugs.");
+            BepInExPlugin.isFixBugs = base.Config.Bind<bool>("Options", "IsFixBugs", false, "fix some bugs.");
             BepInExPlugin.isFixAI = base.Config.Bind<bool>("Options", "isFixAI", true, "fix compation's ai.");
             BepInExPlugin.replaceLocalizetionText = base.Config.Bind<bool>("Options", "ReplaceLocalizetionText", true, "replace localizetion text.");
+
+            BepInExPlugin.LocalizetionHotkeyEnable = base.Config.Bind<bool>("Options", "LocalizetionHotkeyEnable", false, "enable hot key about localizetion.");
+            BepInExPlugin.reloadLocalizetionHotKey = base.Config.Bind<KeyCode>("Options", "ReloadLocalizetionHotKey", KeyCode.L, "left Ctrl + hotkey to reload localizetion txt");
+            BepInExPlugin.saveMissLocalizetionHotKey = base.Config.Bind<KeyCode>("Options", "SaveMissLocalizetionHotKey", KeyCode.D, "left Ctrl + hotkey to save miss_localizetion txt");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Dbgl("Plugin awake", true);
         }
+
+        private void Update()
+        {
+            if (BepInExPlugin.LocalizetionHotkeyEnable.Value)
+            {
+                var key = new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.reloadLocalizetionHotKey.Value, KeyCode.LeftControl);
+                if (key.IsDown())
+                {
+                    //
+                    InitLocalizetionText(true);
+                    if (Global.code != null && Global.code.uiCombat != null)
+                    {
+                        Global.code.uiCombat.AddRollHint("Reload Localizetion.txt", Color.white);
+                    }
+                }
+                key = new BepInEx.Configuration.KeyboardShortcut(KeyCode.D, KeyCode.LeftControl);
+                if (key.IsDown())
+                {
+                    //
+                    string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "miss_Localization.txt");
+                    string[] arr = missTextKeys.ToArray();
+                    missTextKeys.Clear();
+                    File.WriteAllLines(path, arr, Encoding.UTF8);
+                    if (Global.code != null && Global.code.uiCombat != null)
+                    {
+                        Global.code.uiCombat.AddRollHint("Save miss_Localization.txt", Color.white);
+                    }
+                }
+            }
+        }
+
         #region fix bugs
         //CustomizationSlider
         [HarmonyPatch(typeof(CustomizationSlider), "Start")]
@@ -667,15 +705,30 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
         #endregion
 
         #region language
+        private static bool IsNumber(string str) {
+            if (string.IsNullOrEmpty(str)) {
+                return false;
+            }
+            char[] cs = str.ToCharArray();
+            foreach (char c in cs) {
+                if (c < '0' && c > '9' && c != '.') {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         private static bool sInit = false;
         private static Dictionary<string, List<string>> LocalizationDic = new Dictionary<string, List<string>>();
 
-        private static void InitLocalizetionText()
+        private static void InitLocalizetionText(bool force=false)
         {
-            if (sInit)
+            if (!force)
             {
-                return;
+                if (sInit)
+                {
+                    return;
+                }
             }
             sInit = true;
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Localization.txt");
@@ -689,9 +742,11 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                     LocalizationData = TableManager.DeserializeStringTODIc<string, Table_Localization>(json);
                 }
             }
-            catch
+            catch(Exception e)
             {
-                BepInExPlugin.Dbgl("read Localization error:" + path);
+                Error("read Localization error:" + path);
+                Error(e.Message);
+                Error(e.StackTrace);
                 return;
             }
             if (LocalizationData == null)
@@ -700,14 +755,24 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                 return;
             }
             BepInExPlugin.Dbgl("read localization success!", true);
+            if (force)
+            {
+                LocalizationDic.Clear();
+            }
             foreach (KeyValuePair<string, Table_Localization> keyValuePair in LocalizationData)
             {
-                LocalizationDic.Add(keyValuePair.Key, new List<string>
-            {
-                keyValuePair.Value.ENGLISH,
-                keyValuePair.Value.CHINESE,
-                keyValuePair.Value.RUSSIAN
-            });
+                if (!LocalizationDic.ContainsKey(keyValuePair.Key))
+                {
+                    LocalizationDic.Add(keyValuePair.Key, new List<string>
+                    {
+                        keyValuePair.Value.ENGLISH,
+                        keyValuePair.Value.CHINESE,
+                        keyValuePair.Value.RUSSIAN
+                    });
+                }
+                else {
+                    Error("exist key:" + keyValuePair.Key);
+                }
             }
         }
 
@@ -729,7 +794,13 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
             {
                 return GetContentLocal(list, _KEY, pars);
             }
-            //BepInExPlugin.Dbgl("miss localization:" + _KEY, true);
+            if (BepInExPlugin.LocalizetionHotkeyEnable.Value)
+            {
+                if (!IsNumber(_KEY) && !missTextKeys.Contains(_KEY))
+                {
+                    missTextKeys.Add(_KEY);
+                }
+            }
             return _KEY;
         }
 
@@ -773,7 +844,13 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                         __result = GetContentLocal(list, _KEY, pars);
                         return false;
                     }
-                    //BepInExPlugin.Dbgl("miss localization:" + _KEY, true);
+                    if (BepInExPlugin.LocalizetionHotkeyEnable.Value)
+                    {
+                        if (!IsNumber(_KEY) && !missTextKeys.Contains(_KEY))
+                        {
+                            missTextKeys.Add(_KEY);
+                        }
+                    }
                     //按照原始读法
                     return true;
                 }

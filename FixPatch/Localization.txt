@@ -1,4 +1,130 @@
 {
+  "Toxic Viper Armor": {
+    "ID": 80048,
+    "KEY": "Toxic Viper Armor",
+    "CHINESE": "毒蛇盔甲",
+    "ENGLISH": "Toxic Viper Armor",
+    "RUSSIAN": "Toxic Viper Armor"
+  },
+  "Dark Omen Armor": {
+    "ID": 80047,
+    "KEY": "Dark Omen Armor",
+    "CHINESE": "黑暗凶兆盔甲",
+    "ENGLISH": "Dark Omen Armor",
+    "RUSSIAN": "Dark Omen Armor"
+  },
+  "Knight Priestess_SilverRomb_Boots ": {
+    "ID": 80046,
+    "KEY": "Knight Priestess_SilverRomb_Boots ",
+    "CHINESE": "镀银女祭司高跟鞋",
+    "ENGLISH": "Knight Priestess SilverRomb Boots",
+    "RUSSIAN": "Knight Priestess SilverRomb Boots",
+  },
+  "Golden Zealoth Arm Guard": {
+    "ID": 80045,
+    "KEY": "Golden Zealoth Arm Guard",
+    "CHINESE": "金色热诚护臂",
+    "ENGLISH": "Golden Zealoth Arm Guard",
+    "RUSSIAN": "Golden Zealoth Arm Guard"
+  },
+  "Dark Omen Bracers": {
+    "ID": 80044,
+    "KEY": "Dark Omen Bracers",
+    "CHINESE": "黑暗凶兆护腕",
+    "ENGLISH": "Dark Omen Bracers",
+    "RUSSIAN": "Dark Omen Bracers"
+  },
+  "Demon Warrior Boots": {
+    "ID": 80043,
+    "KEY": "Demon Warrior Boots",
+    "CHINESE": "恶魔战士鞋子",
+    "ENGLISH": "Demon Warrior Boots",
+    "RUSSIAN": "Demon Warrior Boots"
+  },
+  "Knight Priestess_BrownLeather_Boots ": {
+    "ID": 80042,
+    "KEY": "Knight Priestess_BrownLeather_Boots ",
+    "CHINESE": "棕色女祭司高跟鞋",
+    "ENGLISH": "Knight Priestess BrownLeather Boots",
+    "RUSSIAN": "Knight Priestess BrownLeather Boots",
+  },
+  "Knight Priestess_BlackGold_Boots ": {
+    "ID": 80041,
+    "KEY": "Knight Priestess_BlackGold_Boots ",
+    "CHINESE": "金色女祭司高跟鞋",
+    "ENGLISH": "Knight Priestess Black and Gold Boots",
+    "RUSSIAN": "Knight Priestess Black and Gold Boots",
+  },
+  "Demon Knight Armor": {
+    "ID": 80040,
+    "KEY": "Demon Knight Armor",
+    "CHINESE": "恶魔骑士盔甲",
+    "ENGLISH": "Demon Knight Armor",
+    "RUSSIAN": "Demon Knight Armor"
+  },
+  "Night Creep Armor": {
+    "ID": 80039,
+    "KEY": "Night Creep Armor",
+    "CHINESE": "夜行者护甲",
+    "ENGLISH": "Night Creep Armor",
+    "RUSSIAN": "Night Creep Armor"
+  },
+  "Zealoth_Blue_Bracers": {
+    "ID": 80038,
+    "KEY": "Zealoth_Blue_Bracers",
+    "CHINESE": "蓝色热诚护腕",
+    "ENGLISH": "Zealoth Blue Bracers",
+    "RUSSIAN": "Zealoth Blue Bracers"
+  },
+  "Night Creep Bracers": {
+    "ID": 80037,
+    "KEY": "Night Creep Bracers",
+    "CHINESE": "夜行者护腕",
+    "ENGLISH": "Night Creep Bracers",
+    "RUSSIAN": "Night Creep Bracers"
+  },
+  "Demon Warrior Gloves": {
+    "ID": 80036,
+    "KEY": "Demon Warrior Gloves",
+    "CHINESE": "恶魔战士手套",
+    "ENGLISH": "Demon Warrior Gloves",
+    "RUSSIAN": "Demon Warrior Gloves"
+  },
+  "Demon Knight Bracers": {
+    "ID": 80035,
+    "KEY": "Demon Knight Bracers",
+    "CHINESE": "恶魔骑士护手",
+    "ENGLISH": "Demon Knight Bracers",
+    "RUSSIAN": "Demon Knight Bracers"
+  },
+  "Queen of Thorns Gloves Red": {
+    "ID": 80034,
+    "KEY": "Queen of Thorns Gloves Red",
+    "CHINESE": "红色荆棘手套",
+    "ENGLISH": "Queen of Thorns Gloves Red",
+    "RUSSIAN": "Queen of Thorns Gloves Red"
+  },
+  "Queen of Thorns Gloves Blue": {
+    "ID": 80034,
+    "KEY": "Queen of Thorns Gloves Blue",
+    "CHINESE": "蓝色荆棘手套",
+    "ENGLISH": "Queen of Thorns Gloves Blue",
+    "RUSSIAN": "Queen of Thorns Gloves Blue"
+  },
+  "Queen of Thorns Gloves Purple": {
+    "ID": 80033,
+    "KEY": "Queen of Thorns Gloves Purple",
+    "CHINESE": "紫色荆棘手套",
+    "ENGLISH": "Queen of Thorns Gloves Purple",
+    "RUSSIAN": "Queen of Thorns Gloves Purple"
+  },
+  "Queen of Thorns Gloves Orange": {
+    "ID": 80032,
+    "KEY": "Queen of Thorns Gloves Orange",
+    "CHINESE": "橙色荆棘手套",
+    "ENGLISH": "Queen of Thorns Gloves Orange",
+    "RUSSIAN": "Queen of Thorns Gloves Orange"
+  },
   "Misty Boardsword": {
     "ID": 80031,
     "KEY": "Misty Boardsword",

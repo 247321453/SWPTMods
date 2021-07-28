@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace SharedExperience
 {
-    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.5")]
+    [BepInPlugin("caicai.SharedExperience", "Shared Experience", "0.0.6")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -22,7 +22,7 @@ namespace SharedExperience
 
         public static ConfigEntry<int> nexusID;
 
-        public static ConfigEntry<bool> isShared;
+        public static ConfigEntry<bool> keepKillerExp;
 
         public static ConfigEntry<KeyCode> hotKey;
         /// <summary>
@@ -30,8 +30,8 @@ namespace SharedExperience
         /// </summary>
         public static ConfigEntry<float> partyExpRate;
 
-        public static ConfigEntry<string> sharedEnableStr;
-        public static ConfigEntry<string> sharedDisableStr;
+        public static ConfigEntry<string> keepKillerExpEnableStr;
+        public static ConfigEntry<string> keepKillerExpDisableStr;
 
         public static void Dbgl(string str = "", bool pref = true)
         {
@@ -50,10 +50,10 @@ namespace SharedExperience
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
             BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 23, "Nexus mod ID for updates");
             BepInExPlugin.hotKey = base.Config.Bind<KeyCode>("Options", "HotKey", KeyCode.S, "left Ctrl + hotkey to toggle shared.");
-            BepInExPlugin.isShared = base.Config.Bind<bool>("Options", "IsShared", true, "If it is true, the teammate’s experience is obtained from the killing experience. Otherwise, the teammate’s experience is an additional increase and does not affect the killer’s experience. ");
-            BepInExPlugin.partyExpRate = base.Config.Bind<float>("Options", "PartyExpRate", 0.1f, "party members add exp rate");
-            BepInExPlugin.sharedEnableStr = base.Config.Bind<string>("Options", "EnableTip", "Shared EXP Open", "isShared=true");
-            BepInExPlugin.sharedDisableStr = base.Config.Bind<string>("Options", "DisableTip", "Shared EXP Close", "isShared=false");
+            BepInExPlugin.keepKillerExp = base.Config.Bind<bool>("Options", "KeepKillerExp", true, "If it is false, the teammate’s experience is obtained from the killing experience. Otherwise, the teammate’s experience is an additional increase and does not affect the killer’s experience. ");
+            BepInExPlugin.partyExpRate = base.Config.Bind<float>("Options", "PartyExpRate", 0.1f, "party members add exp rate.(0-1.0)");
+            BepInExPlugin.keepKillerExpEnableStr = base.Config.Bind<string>("Options", "KeepKillerExpEnableStr", "Keep killer exp Open", "KeepKillerExp=true");
+            BepInExPlugin.keepKillerExpDisableStr = base.Config.Bind<string>("Options", "KeepKillerExpDisableStr", "Keep killer exp Close", "KeepKillerExp=false");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Dbgl("Plugin awake", true);
         }
@@ -63,41 +63,25 @@ namespace SharedExperience
             var key = new BepInEx.Configuration.KeyboardShortcut(BepInExPlugin.hotKey.Value, KeyCode.LeftControl);
             if (key.IsDown())
             {
-                BepInExPlugin.isShared.Value = !BepInExPlugin.isShared.Value;
-                BepInExPlugin.Dbgl(string.Format("set exp share: {0}", BepInExPlugin.isShared.Value), true);
-                if (BepInExPlugin.isShared.Value)
+                BepInExPlugin.keepKillerExp.Value = !BepInExPlugin.keepKillerExp.Value;
+                BepInExPlugin.Dbgl(string.Format("set exp share: {0}", BepInExPlugin.keepKillerExp.Value), true);
+                if (Global.code != null && Global.code.uiCombat != null)
                 {
-                    Global.code.uiCombat.AddRollHint(BepInExPlugin.sharedEnableStr.Value, Color.green);
-                }
-                else
-                {
-                    Global.code.uiCombat.AddRollHint(BepInExPlugin.sharedDisableStr.Value, Color.green);
+                    if (BepInExPlugin.keepKillerExp.Value)
+                    {
+                        Global.code.uiCombat.AddRollHint(BepInExPlugin.keepKillerExpEnableStr.Value, Color.green);
+                    }
+                    else
+                    {
+                        Global.code.uiCombat.AddRollHint(BepInExPlugin.keepKillerExpDisableStr.Value, Color.green);
+                    }
                 }
             }
         }
 
         #region old
-        // 在所有插件全部启动完成后会调用Start()方法，执行顺序在Awake()后面；
-        //    private void Start()
-        //    {
-        //        //Debug.Log("这里是Start()方法中的内容!");
-        //    }
-        // 插件启动后会一直循环执行Update()方法，可用于监听事件或判断键盘按键，执行顺序在Start()后面
-        //  private void Update()
-        //   {
-        // var key = new BepInEx.Configuration.KeyboardShortcut(KeyCode.F9);
-        // if (key.IsDown())
-        //{
-        //     Debug.Log("这里是Updatet()方法中的内容，你看到这条消息是因为你按下了F9");
-        // }
-        //  }
-        // 在插件关闭时会调用OnDestroy()方法
-        // private void OnDestroy()
-        //{
-        //     //Debug.Log("当你看到这条消息时，就表示我已经被关闭一次了!");
-        // }
         #endregion
-        [HarmonyPatch(typeof(ID), "AddExp")]
+        /*[HarmonyPatch(typeof(ID), "AddExp")]
         private static class ID_AddExp_Patch
         {
             private static void Prefix(ID __instance, int exp)
@@ -105,15 +89,14 @@ namespace SharedExperience
                 Dbgl(__instance.name + ".AddExp(" + exp + ")");
             }
         }
-
+        */
 
         [HarmonyPatch(typeof(Monster), "Die")]
         private static class Monster_Die_Patch
         {
             private static void Prefix(Monster __instance)
             {
-                bool flag = !BepInExPlugin.modEnabled.Value;
-                if (!flag)
+                if (!BepInExPlugin.modEnabled.Value)
                 {
                     if (__instance.gameObject.tag == "D")
                     {
@@ -125,6 +108,9 @@ namespace SharedExperience
                     {
                         //经验计算
                         var killer = __instance._ID.damageSource.GetComponent<ID>();
+                        if (killer == null) {
+                            return;
+                        }
                         int num = 50;
                         num += 20 * __instance._ID.level;
                         num *= (int)(__instance.enemyRarity + 1);
@@ -182,7 +168,7 @@ namespace SharedExperience
                                 }
                             }
                         }
-                        if (BepInExPlugin.isShared.Value)
+                        if (!BepInExPlugin.keepKillerExp.Value)
                         {
                             if (num <= 0)
                             {

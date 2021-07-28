@@ -9,7 +9,7 @@ using System.IO;
 
 namespace EnhanceEquip
 {
-    [BepInPlugin("caicai.EnhanceEquip", "Enhance Equip", "0.0.6")]
+    [BepInPlugin("caicai.EnhanceEquip", "Enhance Equip", "0.0.7")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -17,6 +17,7 @@ namespace EnhanceEquip
         public static ConfigEntry<bool> modEnabled;
         public static ConfigEntry<int> nexusID;
         public static ConfigEntry<bool> isDebug;
+        public static ConfigEntry<string> maxEnchanceStr;
         private static bool sInit = false;
         private static Dictionary<int, string> sLevelDic = new Dictionary<int, string>();
         private static Dictionary<string, int> sLevelNameDic = new Dictionary<string, int>();
@@ -36,6 +37,7 @@ namespace EnhanceEquip
             BepInExPlugin.modEnabled = base.Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
             BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 28, "Nexus mod ID for updates");
+            BepInExPlugin.maxEnchanceStr = Config.Bind<string>("General", "MaxEnchanceStr", "can't enhance equip {}");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Dbgl("Plugin awake", true);
             Init();
@@ -409,7 +411,7 @@ Chromatic:辐射之, level=9, fire=0, cold=0, lightening=0, poison=10
                             }
                             else
                             {
-                                Global.code.uiCombat.AddRollHint("can't enhance equip " + main_item.GetName(), Color.red);
+                                Global.code.uiCombat.AddRollHint(string.Format(BepInExPlugin.maxEnchanceStr.Value, main_item.GetName()), Color.red);
                             }
                         }
                         return true;

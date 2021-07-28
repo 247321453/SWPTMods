@@ -60,44 +60,65 @@ namespace AutoPickup
             {
                 BepInExPlugin.isOnlyGoldAndCrystals.Value = !BepInExPlugin.isOnlyGoldAndCrystals.Value;
                 BepInExPlugin.Dbgl(string.Format("set isOnlyGoldAndCrystals: {0}", BepInExPlugin.isOnlyGoldAndCrystals.Value), true);
-                if (BepInExPlugin.isOnlyGoldAndCrystals.Value)
+                if (Global.code != null && Global.code.uiCombat != null)
                 {
-                    Global.code.uiCombat.AddRollHint(BepInExPlugin.onlyGoldAndCrystalsEnableStr.Value, Color.green);
-                }
-                else
-                {
-                    Global.code.uiCombat.AddRollHint(BepInExPlugin.onlyGoldAndCrystalsDisableStr.Value, Color.green);
+                    if (BepInExPlugin.isOnlyGoldAndCrystals.Value)
+                    {
+                        Global.code.uiCombat.AddRollHint(BepInExPlugin.onlyGoldAndCrystalsEnableStr.Value, Color.green);
+                    }
+                    else
+                    {
+                        Global.code.uiCombat.AddRollHint(BepInExPlugin.onlyGoldAndCrystalsDisableStr.Value, Color.green);
+                    }
                 }
             }
             if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha1, KeyCode.LeftControl).IsDown())
             {
                 BepInExPlugin.filterRarity.Value = 1;
-                Global.code.uiCombat.AddRollHint("Filter:Whilte", Color.white);
+                if (Global.code != null && Global.code.uiCombat != null)
+                {
+                    Global.code.uiCombat.AddRollHint("Filter:Whilte", Color.white);
+                }
             }
             else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha2, KeyCode.LeftControl).IsDown())
             {
                 BepInExPlugin.filterRarity.Value = 2;
-                Global.code.uiCombat.AddRollHint("Filter:Blue", Color.white);
+                if (Global.code != null && Global.code.uiCombat != null)
+                {
+                    Global.code.uiCombat.AddRollHint("Filter:Blue", Color.white);
+                }
             }
             else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha3, KeyCode.LeftControl).IsDown())
             {
                 BepInExPlugin.filterRarity.Value = 3;
-                Global.code.uiCombat.AddRollHint("Filter:Yellow", Color.white);
+                if (Global.code != null && Global.code.uiCombat != null)
+                {
+                    Global.code.uiCombat.AddRollHint("Filter:Yellow", Color.white);
+                }
             }
             else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha4, KeyCode.LeftControl).IsDown())
             {
                 BepInExPlugin.filterRarity.Value = 4;
-                Global.code.uiCombat.AddRollHint("Filter:Green", Color.white);
+                if (Global.code != null && Global.code.uiCombat != null)
+                {
+                    Global.code.uiCombat.AddRollHint("Filter:Green", Color.white);
+                }
             }
             else if(new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha5, KeyCode.LeftControl).IsDown())
             {
                 BepInExPlugin.filterRarity.Value = 5;
-                Global.code.uiCombat.AddRollHint("Filter:Red", Color.white);
+                if (Global.code != null && Global.code.uiCombat != null)
+                {
+                    Global.code.uiCombat.AddRollHint("Filter:Red", Color.white);
+                }
             }
             else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha6, KeyCode.LeftControl).IsDown())
             {
                 BepInExPlugin.filterRarity.Value = 6;
-                Global.code.uiCombat.AddRollHint("Filter:Cyan", Color.white);
+                if (Global.code != null && Global.code.uiCombat != null)
+                {
+                    Global.code.uiCombat.AddRollHint("Filter:Cyan", Color.white);
+                }
             }
         }
 
