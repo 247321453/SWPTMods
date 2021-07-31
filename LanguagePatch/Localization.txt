@@ -135,7 +135,7 @@
   "X-Fighter_Red": {
     "ID": 80086,
     "KEY": "X-Fighter_Red",
-    "CHINESE": "红色X-斗士高跟鞋",
+    "CHINESE": "红色X-斗士盔甲",
     "ENGLISH": "X-Fighter Red",
     "RUSSIAN": "X-Fighter Red",
   },
@@ -247,7 +247,7 @@
   "Nude": {
     "ID": 80102,
     "KEY": "Nude",
-    "CHINESE": "裸体",
+    "CHINESE": "肉色",
     "ENGLISH": "Nude",
     "RUSSIAN": "Nude",
   },
@@ -345,7 +345,7 @@
   "Simple Nude Pantyhose": {
     "ID": 80116,
     "KEY": "Simple Nude Pantyhose",
-    "CHINESE": "简易透明连裤袜",
+    "CHINESE": "简易肉色连裤袜",
     "ENGLISH": "Simple Nude Pantyhose",
     "RUSSIAN": "Simple Nude Pantyhose",
   },
@@ -695,14 +695,14 @@
   "X-Fighter_RoyalRed ": {
     "ID": 80010,
     "KEY": "X-Fighter_RoyalRed ",
-    "CHINESE": "红色X-斗士皇家鞋子",
+    "CHINESE": "红色X-斗士皇家盔甲",
     "ENGLISH": "X-Fighter RoyalRed",
     "RUSSIAN": "X-Fighter RoyalRed"
   },
   "X-Fighter RoyalGrey": {
     "ID": 80011,
     "KEY": "X-Fighter RoyalGrey",
-    "CHINESE": "灰色X-斗士皇家护甲",
+    "CHINESE": "灰色X-斗士皇家盔甲",
     "ENGLISH": "X-Fighter RoyalGrey",
     "RUSSIAN": "X-Fighter RoyalGrey"
   },

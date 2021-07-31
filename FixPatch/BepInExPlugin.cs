@@ -9,10 +9,11 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using static HarmonyLib.AccessTools;
 
 namespace FixPatch
 {
-    [BepInPlugin("caicai.FixPatch", "Fix Patch", "0.1.1")]
+    [BepInPlugin("caicai.FixPatch", "Fix Patch", "0.1.4")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -29,9 +30,22 @@ namespace FixPatch
 
         public static ConfigEntry<bool> isFixAI;
 
-        public static ConfigEntry<bool> elementDamageEnable;
+        public static ConfigEntry<bool> isFixPullBow;
 
-        public static ConfigEntry<float> elementDamageRate;
+        public static ConfigEntry<bool> isOnlyPlayerAndCompanion;
+
+        public static ConfigEntry<float> PullBowDamageRate;
+
+        public static ConfigEntry<int> PullBowMaxTime;
+
+        private static float BOW_ATTACK_LIMIT = 20f;
+        public static ConfigEntry<string> NoWeaponMsg;
+
+        //   public static ConfigEntry<bool> elementDamageEnable;
+
+        //   public static ConfigEntry<float> elementDamageRate;
+
+        private static int MIN_PULL_BOW = 800;
         private enum CompanionCmd
         {
             FollowMe,
@@ -59,13 +73,225 @@ namespace FixPatch
             BepInExPlugin.isDebug = base.Config.Bind<bool>("General", "IsDebug", true, "Enable debug logs");
             BepInExPlugin.nexusID = Config.Bind<int>("General", "NexusID", 29, "Nexus mod ID for updates");
 
-            BepInExPlugin.elementDamageEnable = base.Config.Bind<bool>("Options", "ElementDamageEnable", true, "Enable elemental damage of weapon");
-            BepInExPlugin.elementDamageRate = base.Config.Bind<float>("Options", "ElementDamageRate", 0.1f, "magic attributes can increase the elemental damage of weapons");
+            //   BepInExPlugin.elementDamageEnable = base.Config.Bind<bool>("Options", "ElementDamageEnable", false, "Enable elemental damage of weapon");
+            //    BepInExPlugin.elementDamageRate = base.Config.Bind<float>("Options", "ElementDamageRate", 0.1f, "magic attributes can increase the elemental damage of weapons");
             BepInExPlugin.isFixAffixes = base.Config.Bind<bool>("Options", "IsFixAffixes", true, "fix weapon and armor 's affixes.");
             BepInExPlugin.isFixBugs = base.Config.Bind<bool>("Options", "IsFixBugs", false, "fix some bugs.");
             BepInExPlugin.isFixAI = base.Config.Bind<bool>("Options", "isFixAI", true, "fix compation's ai.");
+            BepInExPlugin.isFixPullBow = base.Config.Bind<bool>("Options", "isFixPullBow", true, "fix compation's ai.");
+            BepInExPlugin.isOnlyPlayerAndCompanion = base.Config.Bind<bool>("Options", "IsOnlyPlayerAndCompanion", true, "only player and companion enable pull bow append damage and element damage.");
+            BepInExPlugin.PullBowDamageRate = base.Config.Bind<float>("Options", "PullBowDamageRate", 0.1f, "Bow accumulate increases damage rate.Default:10%/0.1s");
+            BepInExPlugin.PullBowMaxTime = base.Config.Bind<int>("Options", "PullBowMaxTime", 3, "pull bow max time, default is 3s");
+            BepInExPlugin.NoWeaponMsg = base.Config.Bind<string>("Options", "NoWeaponMsg", ": I need a weapon or arrows.", "message");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Debug("Plugin awake", true);
+        }
+
+        private static Dictionary<CharacterCustomization, long> sBowStartTime = new Dictionary<CharacterCustomization, long>();
+        private static Dictionary<CharacterCustomization, int> sBowPullBowTime = new Dictionary<CharacterCustomization, int>();
+
+        private static void AddOrUpdate<K, V>(Dictionary<K, V> dic, K k, V v)
+        {
+            if (dic.ContainsKey(k))
+            {
+                dic[k] = v;
+            }
+            else
+            {
+                dic.Add(k, v);
+            }
+        }
+
+        private static bool ChangeMeleeWeapon(CharacterCustomization __instance, bool notify = true)
+        {
+            if (__instance.weapon && __instance.weapon.GetComponent<Weapon>().weaponType != WeaponType.bow)
+            {
+                __instance.DrawWeapon(1);
+                return true;
+            }
+            else if (__instance.weapon2 && __instance.weapon2.GetComponent<Weapon>().weaponType != WeaponType.bow)
+            {
+                __instance.DrawWeapon(2);
+                return true;
+            }
+            if (notify)
+            {
+                Global.code.uiCombat.AddRollHint(__instance.characterName + NoWeaponMsg.Value, Color.red);
+            }
+            return false;
+        }
+        private static int ChangeBowWeapon(CharacterCustomization __instance, bool notify = false)
+        {
+            if (__instance.storage.GetItemCount("Arrow") <= 0)
+            {
+                return 0;
+            }
+            if (__instance.weapon && __instance.weapon.GetComponent<Weapon>().weaponType == WeaponType.bow)
+            {
+                __instance.DrawWeapon(1);
+                return 1;
+            }
+            else if (__instance.weapon2 && __instance.weapon2.GetComponent<Weapon>().weaponType == WeaponType.bow)
+            {
+                __instance.DrawWeapon(2);
+                return 2;
+            }
+            if (notify)
+            {
+                Global.code.uiCombat.AddRollHint(__instance.characterName + NoWeaponMsg.Value, Color.red);
+            }
+            return 0;
+        }
+
+        private static bool WeaponIsBow(CharacterCustomization character)
+        {
+            if (character.weaponIndex == 1 && character.weapon && character.weapon.GetComponent<Weapon>().weaponType == WeaponType.bow)
+            {
+                return true;
+            }
+            else if (character.weaponIndex == 2 && character.weapon2 && character.weapon2.GetComponent<Weapon>().weaponType == WeaponType.bow)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        static FieldRef<CharacterCustomization, int> emptyhashRef = AccessTools.FieldRefAccess<CharacterCustomization, int>("emptyhash");
+
+        //DrawWeapon
+        [HarmonyPatch(typeof(CharacterCustomization), "DrawWeapon")]
+        private static class CharacterCustomization_DrawWeapon_Patch
+        {
+
+            private static bool Prefix(CharacterCustomization __instance, int index)
+            {
+                if (index != 1)
+                {
+                    return true;
+                }
+                if (__instance.anim.GetCurrentAnimatorStateInfo(1).tagHash == emptyhashRef(__instance) && __instance.canDrawWeapon && !__instance.curCastingMagic)
+                {
+                    var comp = __instance.GetComponent<Companion>();
+                    if (comp != null)
+                    {
+                        if (__instance.weapon && __instance.weapon.GetComponent<Weapon>().weaponType == WeaponType.bow)
+                        {
+                            //是弓箭，但是没有箭了，切换其他武器
+                            if (__instance.storage.GetItemCount("Arrow") <= 0)
+                            {
+                                if (__instance.weapon2)
+                                {
+                                    __instance.DrawWeapon(2);
+                                    return false;
+                                }
+                                Global.code.uiCombat.AddRollHint(__instance.characterName + NoWeaponMsg.Value, Color.red);
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(CharacterCustomization), "PullBow")]
+        private static class CharacterCustomization_PullBow_Patch
+        {
+
+            private static bool Prefix(CharacterCustomization __instance)
+            {
+                if (__instance.isPullingBow)
+                {
+                    return true;
+                }
+                var comp = __instance.GetComponent<Companion>();
+                if (comp != null)
+                {
+                    //是随从
+                    if (__instance.storage.GetItemCount("Arrow") <= 0)
+                    {
+                        Debug(__instance.characterName + "'s arrow is 0, change bow to other");
+                        //TODO 切换武器
+                        __instance.CancelPullBow();
+                        if (ChangeMeleeWeapon(__instance))
+                        {
+                            EnemyInAttackDistRef.Invoke(comp, new object[0]);
+                        }
+                        return false;
+                    }
+                }
+                if (isFixPullBow.Value)
+                {
+                    //(1Ticks = 0.0001毫秒)
+                    long time = DateTime.Now.Ticks / 10000;
+                    AddOrUpdate(sBowStartTime, __instance, time);
+                    // Global.code.uiCombat.AddRollHint(__instance.characterName + " start pull bow", Color.white);
+                }
+                return true;
+            }
+        }
+
+
+        [HarmonyPatch(typeof(CharacterCustomization), "UpdateStats")]
+        private static class CharacterCustomization_UpdateStats_Patch
+        {
+            private static void Prefix(CharacterCustomization __instance)
+            {
+                if (__instance._Player)
+                {
+                    Debug(__instance.characterName + " before UpdateStats damage:" + __instance.GetComponent<ID>().damage);
+                }
+            }
+            private static void Postfix(CharacterCustomization __instance)
+            {
+                if (__instance._Player)
+                {
+                    Debug(__instance.characterName + " after UpdateStats damage:" + __instance.GetComponent<ID>().damage);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(CharacterCustomization), "CancelPullBow")]
+        private static class CharacterCustomization_CancelPullBow_Patch
+        {
+
+            private static void Prefix(CharacterCustomization __instance)
+            {
+                if (!__instance.isPullingBow)
+                {
+                    return;
+                }
+                if (!isFixPullBow.Value)
+                {
+                    return;
+                }
+                long startTime;
+                if (sBowStartTime.TryGetValue(__instance, out startTime))
+                {
+                    long time = DateTime.Now.Ticks / 10000;
+                    int max = (BepInExPlugin.PullBowMaxTime.Value * 1000);
+                    int val;
+                    if ((time - startTime - MIN_PULL_BOW) > max)
+                    {
+                        val = max;
+                    }
+                    else
+                    {
+                        val = (int)(time - startTime - MIN_PULL_BOW);
+                    }
+                    if (val < 0)
+                    {
+                        val = 0;
+                    }
+                    AddOrUpdate(sBowPullBowTime, __instance, val);
+                    Debug(__instance.characterName + "'s pull bow time set " + val + " by action");
+                    // Global.code.uiCombat.AddRollHint(__instance.characterName + " end pull bow time is " + val, Color.white);
+                }
+            }
         }
 
         #region fix bugs
@@ -87,10 +313,8 @@ namespace FixPatch
                 return true;
             }
         }
-        static AccessTools.FieldRef<ThirdPersonCharacter, Rigidbody> m_Rigidbody =
-     AccessTools.FieldRefAccess<ThirdPersonCharacter, Rigidbody>("m_Rigidbody");
-        static AccessTools.FieldRef<ThirdPersonCharacter, Animator> m_Animator =
-AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
+        static FieldRef<ThirdPersonCharacter, Rigidbody> m_Rigidbody = FieldRefAccess<ThirdPersonCharacter, Rigidbody>("m_Rigidbody");
+        static FieldRef<ThirdPersonCharacter, Animator> m_Animator = FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
 
         [HarmonyPatch(typeof(ThirdPersonCharacter), "HandleAirborneMovement")]
         private static class ThirdPersonCharacter_HandleAirborneMovement_Patch
@@ -199,10 +423,13 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
             }
         }
 
+        private static Dictionary<Weapon, float> sWeaponDamage = new Dictionary<Weapon, float>();
+
+
         [HarmonyPatch(typeof(Weapon), "DealDamage")]
         private static class Weapon_DealDamage_Patch
         {
-
+            /*
             private static float GetRealDamage(ID component, float dmg, float resist)
             {
                 //魔法属性
@@ -243,57 +470,147 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                 }
                 return addDamage;
             }
-
+            */
             private static void Prefix(Weapon __instance, Bodypart bodypart, float multiplier, bool playStaggerAnimation)
             {
-                if (BepInExPlugin.elementDamageEnable.Value)
+                if (isFixPullBow.Value /* || elementDamageEnable.Value */)
                 {
                     Item item = __instance.GetComponent<Item>();
                     if (item)
                     {
-                        ID component = item.owner.GetComponent<ID>();
-                        ID component2 = bodypart.root.GetComponent<ID>();
-                        float old = component.damage;
-                        float addDamage = GetAddDamage(item, component, component2);
-                        if (addDamage > 0)
+                        ID owner = item.owner.GetComponent<ID>();
+                        if (BepInExPlugin.isOnlyPlayerAndCompanion.Value && owner.monster)
                         {
-                            addDamage *= multiplier;
-                            component.damage += addDamage;
+                            BepInExPlugin.Debug("don't support monster:" + owner.name, true);
+                            return;
                         }
-                        BepInExPlugin.Debug("before DealDamage" + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
+                        //   ID target = bodypart.root.GetComponent<ID>();
+                        var character = owner.GetComponent<CharacterCustomization>();
+                        //保存原始伤害
+                        AddOrUpdate<Weapon, float>(sWeaponDamage, __instance, owner.damage);
+
+                        float old = owner.damage;
+                        /*
+                        if (elementDamageEnable.Value)
+                        {
+                            float addDamage = GetAddDamage(item, owner, target);
+                            if (addDamage > 0)
+                            {
+                                addDamage *= multiplier;
+                                owner.damage += addDamage;
+                            }
+                            BepInExPlugin.Debug("before DealDamage " + owner.name + "'s damage=" + old + "->" + owner.damage, true);
+                        }
+                        */
+                        if (character == null)
+                        {
+                            BepInExPlugin.Debug("before DealDamage character is null", true);
+                        }
+                        else if (isFixPullBow.Value)
+                        {
+                            int val;
+                            if (sBowPullBowTime.TryGetValue(character, out val))
+                            {
+                                //
+                                if (val > 100)
+                                {
+                                    float addDamage = old * (val / 100) * BepInExPlugin.PullBowDamageRate.Value;
+                                    if (addDamage > 0)
+                                    {
+                                        old = owner.damage;
+                                        owner.damage += addDamage;
+                                        BepInExPlugin.Debug("before DealDamage " + character.characterName + "'s pull bow damage=" + old + "->" + owner.damage + ", time=" + val, true);
+                                    }
+                                    else
+                                    {
+                                        BepInExPlugin.Debug("before DealDamage " + character.characterName + "'s addDamage is small, old=" + old + ", rate=" + ((val / 100) * BepInExPlugin.PullBowDamageRate.Value), true);
+                                    }
+                                }
+                                else
+                                {
+                                    BepInExPlugin.Debug("before DealDamage pull bow time = 0", true);
+                                }
+                                AddOrUpdate(sBowPullBowTime, character, 0);
+                                Debug(character.characterName + "'s pull bow time reset by deal damage");
+                            }
+                            else
+                            {
+                                BepInExPlugin.Debug("before DealDamage not character pull bow time, name=" + character.characterName, true);
+                            }
+                        }
                     }
                 }
             }
+            /**
             private static void Postfix(Weapon __instance, Bodypart bodypart, float multiplier, bool playStaggerAnimation)
             {
-                if (BepInExPlugin.elementDamageEnable.Value)
+                if (isFixPullBow.Value)// || elementDamageEnable.Value )
                 {
                     Item item = __instance.GetComponent<Item>();
                     if (item)
                     {
                         ID component = item.owner.GetComponent<ID>();
-                        ID component2 = bodypart.root.GetComponent<ID>();
-                        float old = component.damage;
-                        float addDamage = GetAddDamage(item, component, component2);
-                        if (addDamage > 0)
+                        float old;
+                        if (sWeaponDamage.TryGetValue(__instance, out old))
                         {
-                            addDamage *= multiplier;
-                            component.damage -= addDamage;
+                            BepInExPlugin.Debug("after DealDamage " + item.owner.name + "'s damage=" + component.damage + "->" + old + ", multiplier=" + multiplier, true);
+                            component.damage = old;
                         }
-                        BepInExPlugin.Debug("after DealDamage " + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
+                        else
+                        {
+                            Error("after DealDamage not found prefix damage");
+                            old = component.damage;
+                            if (elementDamageEnable.Value)
+                            {
+                                float addDamage = GetAddDamage(item, component, component2);
+                                if (addDamage > 0)
+                                {
+                                    addDamage *= multiplier;
+                                    component.damage -= addDamage;
+                                }
+                                BepInExPlugin.Debug("after DealDamage" + item.owner.name + "'s damage=" + old + "->" + component.damage, true);
+                            }
+                            if (character && isFixPullBow.Value)
+                            {
+                                int val;
+                                if (component && sBowPullBowTime.TryGetValue(character, out val))
+                                {
+                                    //
+                                    if (val > 100)
+                                    {
+                                        old = component.damage;
+                                        float addDamage = item.damage * (val / 100) * BepInExPlugin.PullBowDamageRate.Value;
+                                        component.damage -= addDamage;
+                                        BepInExPlugin.Debug("after DealDamage" + item.owner.name + "'s pull bow damage=" + old + "->" + component.damage, true);
+                                    }
+                                }
+                                //重置时间
+                                AddOrUpdate<CharacterCustomization, int>(sBowPullBowTime, character, 0);
+                            }
+                        }
                     }
                 }
+
             }
+
+            */
         }
         #endregion
-
+        /*
         #region AI
         [HarmonyPatch(typeof(ID), "AddHealth")]
         private static class ID_AddHealth_Patch
         {
 
-            private static void Postfix(ID __instance)
+            private static void Postfix(ID __instance, float pt, Transform source)
             {
+                if (isDebug.Value)
+                {
+                    if (__instance.GetComponent<Monster>())
+                    {
+                        Debug(__instance.name + " AddHealth " + pt);
+                    }
+                }
                 if (!BepInExPlugin.modEnabled.Value)
                 {
                     return;
@@ -306,34 +623,37 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                 {
                     return;
                 }
-                if (__instance.damageSource)
+                if (__instance.damageSource && __instance.GetComponent<Monster>() == null)
                 {
-                    if (__instance.damageSource.GetComponent<ID>() == Player.code._ID)
-                    {
-                        return;
-                    }
-                    var customization = __instance.GetComponent<CharacterCustomization>();
-                    if (!customization) return;
-                    var companion = customization.GetComponent<Companion>();
-                    if (!companion) return;
+                        if (__instance.damageSource.GetComponent<ID>() == Player.code._ID)
+                        {
+                            return;
+                        }
+                        var customization = __instance.GetComponent<CharacterCustomization>();
+                        if (!customization) return;
+                        var companion = customization.GetComponent<Companion>();
+                        if (!companion) return;
 
-                    //随从受伤
-                    if (companion.charge)
-                    {
-                        companion.target = __instance.damageSource;
-                        BepInExPlugin.Debug(companion.name + " change target", true);
-                    }
-                    if (__instance.health > 0 && (__instance.health / __instance.maxHealth) < 0.1f)
-                    {
-                        //TODO 逃跑
                         //随从受伤
-                        Global.code.uiCombat.AddRollHint(companion.name + ":Help me!", Color.red);
-                    }
+                        //if (companion.charge)
+                        //{
+                        //    companion.target = __instance.damageSource;
+                        //    BepInExPlugin.Debug(companion.name + " change target", true);
+                        //}
+                        if (__instance.health > 0 && (__instance.health / __instance.maxHealth) < 0.1f)
+                        {
+                            //TODO 逃跑
+                            //随从受伤
+                            Global.code.uiCombat.AddRollHint(companion.name + ":Help me!", Color.red);
+                        }
+                    //else if(pt < 0){
+                    //    Global.code.uiCombat.AddRollHint(__instance.name + " add health :"+pt, Color.red);
+                    //}
                 }
             }
 
         }
-
+        */
         [HarmonyPatch(typeof(Global), "CommandGoThereAndStand")]
         private static class Global_CommandGoThereAndStand_Patch
         {
@@ -347,12 +667,15 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                 {
                     return true;
                 }
+                Debug("CommandGoThereAndStand:0");
                 sStatus = CompanionCmd.GoThereAndStand;
-                if (Player.code == null || Player.code.transform == null || __instance.friendlies == null)
+                if (Player.code == null || Player.code.transform == null || __instance.friendlies == null || __instance.friendlies.items == null || RM.code == null || RM.code.sndStand == null)
                 {
                     return true;
                 }
+                Debug("CommandGoThereAndStand:1");
                 RM.code.PlayOneShot(RM.code.sndStand);
+                Debug("CommandGoThereAndStand:1");
                 try
                 {
                     foreach (Transform transform in __instance.friendlies.items)
@@ -378,7 +701,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                                 }.transform;
                                 component.charge = false;
                                 var charactor = component.GetComponent<CharacterCustomization>();
-                                if (charactor)
+                                if (charactor && !WeaponIsBow(charactor))
                                 {
                                     charactor.Block();
                                 }
@@ -460,7 +783,9 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
             }
         }
 
-
+        static MethodInfo EnemyFarRef = AccessTools.DeclaredMethod(typeof(Companion), "EnemyFar");
+        static MethodInfo EnemyCloseRef = AccessTools.DeclaredMethod(typeof(Companion), "EnemyClose");
+        static MethodInfo EnemyInAttackDistRef = AccessTools.DeclaredMethod(typeof(Companion), "EnemyInAttackDist");
         [HarmonyPatch(typeof(Companion), "CS")]
         private static class Companion_CS_Patch
         {
@@ -473,9 +798,6 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                     agent.SetDestination(dest);
                 }
             }
-            static MethodInfo EnemyFarRef = AccessTools.DeclaredMethod(typeof(Companion), "EnemyFar");
-            static MethodInfo EnemyCloseRef = AccessTools.DeclaredMethod(typeof(Companion), "EnemyClose");
-            static MethodInfo EnemyInAttackDistRef = AccessTools.DeclaredMethod(typeof(Companion), "EnemyInAttackDist");
             //EnemyInAttackDist
             private static bool Prefix(Companion __instance)
             {
@@ -497,6 +819,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                 }
                 try
                 {
+                    var charactor = __instance.GetComponent<CharacterCustomization>();
                     __instance.attackDist = 3f;
                     if (__instance.customization.weaponInHand)
                     {
@@ -518,7 +841,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                                 __instance.attackDist = 3f;
                                 break;
                             case WeaponType.bow:
-                                __instance.attackDist = 15f;
+                                __instance.attackDist = 20f;
                                 break;
                             case WeaponType.dagger:
                                 __instance.attackDist = 2.5f;
@@ -540,24 +863,18 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                     {
                         if (!__instance.customization.weaponInHand)
                         {
-                            if (__instance.customization.weapon)
+                            //优先近战，然后是弓箭
+                            if (!ChangeMeleeWeapon(charactor))
                             {
-                                __instance.customization.DrawWeapon(1);
-                            }
-                            else if (__instance.customization.weapon2)
-                            {
-                                __instance.customization.DrawWeapon(2);
+                                ChangeBowWeapon(charactor);
                             }
                         }
                         else if (__instance.customization.anim.runtimeAnimatorController == RM.code.unarmedController)
                         {
-                            if (__instance.customization.weapon)
+                            //优先近战，然后是弓箭
+                            if (!ChangeMeleeWeapon(charactor))
                             {
-                                __instance.customization.DrawWeapon(1);
-                            }
-                            else if (__instance.customization.weapon2)
-                            {
-                                __instance.customization.DrawWeapon(2);
+                                ChangeBowWeapon(charactor);
                             }
                         }
                         if (__instance._ID.health <= 0f)
@@ -567,32 +884,59 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                         if (__instance.target && __instance.target.tag != "D")
                         {
                             __instance.curEnemyDist = Vector3.Distance(__instance.target.position, __instance.myTransform.position);
+
+                            if (__instance.curEnemyDist > __instance.attackDist && __instance.curEnemyDist < BOW_ATTACK_LIMIT && charactor && charactor.storage.GetItemCount("Arrow") > 0)
+                            {
+                                //大于攻击范围，但是有弓箭
+                                int bowIndex = ChangeBowWeapon(charactor);
+                                if (bowIndex > 0)
+                                {
+                                    Debug(charactor.characterName + " change weapon to bow:" + bowIndex + ", distance=" + __instance.curEnemyDist);
+                                }
+                            }
+
                             if (__instance.curEnemyDist <= __instance.attackDist)
                             {
-                                var charactor = __instance.GetComponent<CharacterCustomization>();
+                                bool changed = false;
                                 if (charactor)
                                 {
-                                    charactor.Unblock();
+                                    var weapon = charactor.weaponIndex == 1 ? charactor.weapon.GetComponent<Weapon>() : (charactor.weaponIndex == 2 ? charactor.weapon2.GetComponent<Weapon>() : null);
+                                    if (weapon && weapon.weaponType == WeaponType.bow)
+                                    {
+                                        if (__instance.curEnemyDist <= 5f)
+                                        {
+                                            Debug(charactor.characterName + " change bow to other weapon");
+                                            //距离太近了，切换武器
+                                            changed = ChangeMeleeWeapon(charactor);
+                                        }
+                                    }
                                 }
-                                EnemyInAttackDistRef.Invoke(__instance, new object[0]);
-                                return false;
+                                if (!changed)
+                                {
+                                    //在攻击范围
+                                    if (charactor)
+                                    {
+                                        charactor.Unblock();
+                                    }
+                                    EnemyInAttackDistRef.Invoke(__instance, new object[0]);
+                                    return false;
+                                }
                             }
                         }
                         if (sStatus == CompanionCmd.GoThereAndStand || sStatus == CompanionCmd.FollowMe)
                         {
                             //防守模式
-                            if (__instance.curEnemyDist >= __instance.attackDist)
+                            if (__instance.curEnemyDist >= __instance.attackDist * 1.5f)
                             {
-                                BepInExPlugin.Debug("status is GoThereAndStand, curEnemyDist=" + __instance.curEnemyDist + ", attackDist=" + __instance.attackDist, true);
+                                //  BepInExPlugin.Debug("status is GoThereAndStand, curEnemyDist=" + __instance.curEnemyDist + ", attackDist=" + __instance.attackDist, true);
                                 //敌人太远了
                                 __instance.target = null;
                                 EnemyFarRef.Invoke(__instance, new object[0]);
-                                var charactor = __instance.GetComponent<CharacterCustomization>();
                                 if (charactor)
                                 {
                                     if (__instance.movingToTarget)
                                     {
-                                        if (sStatus != CompanionCmd.FollowMe)
+                                        if (sStatus != CompanionCmd.FollowMe && !WeaponIsBow(charactor))
                                         {
                                             //取消防御
                                             charactor.Unblock();
@@ -600,7 +944,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                                         //随机移动
                                         RandomMove(__instance, __instance.movingToTarget.position);
                                     }
-                                    if (sStatus != CompanionCmd.FollowMe)
+                                    if (sStatus != CompanionCmd.FollowMe && !WeaponIsBow(charactor))
                                     {
                                         charactor.Block();
                                     }
@@ -608,7 +952,7 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                                 return false;
                             }
                         }
-                        if (__instance.curEnemyDist > 15f)
+                        if (__instance.curEnemyDist > BOW_ATTACK_LIMIT)
                         {
                             EnemyFarRef.Invoke(__instance, new object[0]);
                         }
@@ -657,6 +1001,5 @@ AccessTools.FieldRefAccess<ThirdPersonCharacter, Animator>("m_Animator");
                 //TODO
             }
         }
-        #endregion
     }
 }

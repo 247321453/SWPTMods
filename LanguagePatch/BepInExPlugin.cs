@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace LanguagePatch
 {
-    [BepInPlugin("caicai.LanguagePatch", "Language Patch", "0.0.1")]
+    [BepInPlugin("caicai.LanguagePatch", "Language Patch", "0.0.3")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -244,10 +244,11 @@ namespace LanguagePatch
             sMaxID = 0;
             foreach (KeyValuePair<string, Table_Localization> keyValuePair in LocalizationData)
             {
+                string key = keyValuePair.Key.Trim();
                 sMaxID = Math.Max(sMaxID, keyValuePair.Value.ID);
-                if (!LocalizationDic.ContainsKey(keyValuePair.Key))
+                if (!LocalizationDic.ContainsKey(key))
                 {
-                    LocalizationDic.Add(keyValuePair.Key, new List<string>
+                    LocalizationDic.Add(key, new List<string>
                     {
                         keyValuePair.Value.ENGLISH,
                         keyValuePair.Value.CHINESE,
@@ -275,14 +276,22 @@ namespace LanguagePatch
         private static string GetContentLocal(string _KEY, object[] pars)
         {
             List<string> list;
-            if (LocalizationDic.TryGetValue(_KEY, out list))
+            int sp_index = _KEY.IndexOf('(');
+            if (LocalizationDic.TryGetValue(_KEY.Trim(), out list))
             {
-                return GetContentLocal(list, _KEY, pars);
+                return GetContentLocal(list, pars);
+            }
+            if (sp_index > 0) {
+                string key = _KEY.Substring(0, sp_index);
+                if (LocalizationDic.TryGetValue(key.Trim(), out list))
+                {
+                    return GetContentLocal(list, pars) + _KEY.Substring(sp_index);
+                }
             }
             return _KEY;
         }
 
-        private static string GetContentLocal(List<string> list, string _KEY, object[] pars)
+        private static string GetContentLocal(List<string> list, object[] pars)
         {
             string text = list[(int)Localization.CurLanguage];
             if (pars == null || pars.Length == 0)
@@ -319,9 +328,9 @@ namespace LanguagePatch
                     return true;
                 }
                 List<string> list;
-                if (LocalizationDic.TryGetValue(_KEY, out list))
+                if (LocalizationDic.TryGetValue(_KEY.Trim(), out list))
                 {
-                    __result = GetContentLocal(list, _KEY, pars);
+                    __result = GetContentLocal(list, pars);
                     return false;
                 }
                 //按照原始读法
