@@ -86,7 +86,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BepInExPlugin.cs" />
+    <Compile Include="BugPatch.cs" />
+    <Compile Include="CharacterCustomizationUtil.cs" />
+    <Compile Include="CompanionUtil.cs" />
+    <Compile Include="GlobalPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PullBowPatch.cs" />
+    <Compile Include="Util.cs" />
+    <Compile Include="WeaponPatch.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
