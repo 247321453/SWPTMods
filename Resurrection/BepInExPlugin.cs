@@ -65,7 +65,7 @@ namespace Resurrection
                 if (!modEnabled.Value || !__instance.customization || __instance.customization._ID.health <= 0f || !__instance.icondeath.activeSelf)
                     return;
 
-                __instance.healthbar.color = new Color(0f, 1f, 0f, 1.0f);
+                //__instance.healthbar.color = new Color(0f, 1f, 0f, 1.0f);
                 __instance.icondeath.SetActive(false);
 
             }
@@ -78,7 +78,7 @@ namespace Resurrection
             {
                 if (!modEnabled.Value || __instance._Player)
                     return;
-                if (__instance.gameObject.tag == "D")
+                if (__instance.gameObject.tag != "D")
                 {
                     __instance.gameObject.AddComponent<Interaction>();
                 }
@@ -119,39 +119,27 @@ namespace Resurrection
                 heal.generatedEffect = Utility.Instantiate(heal.fx);
                 heal.generatedEffect.position = patient.transform.position;
 
-                patient.gameObject.tag = "Player";
-                patient.UpdateStats();
-                patient._ID.health = patient._ID.maxHealth * resurrectedHealthPercent.Value / 100f;
-                patient._ID.tempHealth = patient._ID.maxHealth * resurrectedHealthPercent.Value / 100f;
-                patient._ID.mana = patient._ID.maxMana;
-                patient._ID.tempMana = patient._ID.maxMana;
-                Global.code.friendlies.AddItemDifferentObject(patient.transform);
-                patient.anim.enabled = true;
+                patient.Respawn();
                 patient.GetComponent<Rigidbody>().isKinematic = false;
-                if (patient.GetComponent<Collider>())
+                if (patient.curCastingMagic && patient.curCastingMagic.generatedHandfx)
                 {
-                    patient.GetComponent<Collider>().enabled = true;
+                    Object.Destroy(patient.curCastingMagic.generatedHandfx.gameObject);
                 }
-                foreach (Transform transform in patient.bones)
-                {
-                    if (transform)
-                    {
-                        transform.GetComponent<Rigidbody>().isKinematic = true;
-                        transform.GetComponent<Rigidbody>().useGravity = false;
-                        transform.GetComponent<Collider>().enabled = false;
-                    }
-                }
+                patient.curCastingMagic = null;
 
                 if (patient.GetComponent<MapIcon>())
                 {
                     Dbgl($"Removing old map icon");
                     DestroyImmediate(patient.gameObject.GetComponent<MapIcon>());
                 }
+
+                //显示血条
                 patient.gameObject.AddComponent<MapIcon>();
                 patient.GetComponent<MapIcon>().healthBarColor = Color.green;
                 patient.GetComponent<MapIcon>().id = patient.GetComponent<ID>();
                 patient.GetComponent<MapIcon>().posBias = new Vector3(0f, 2.3f, 0f);
                 patient.GetComponent<MapIcon>().visibleRange = 300f;
+                //patient.GetComponent<CompanionCombatIcon>().Initiate(patient);
 
                 Dbgl($"Patient restored to {patient._ID.health}/{patient._ID.maxHealth} health");
 
