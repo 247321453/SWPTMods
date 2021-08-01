@@ -30,6 +30,8 @@ namespace FixPatch
 
         public static ConfigEntry<bool> isFixAI;
 
+        public static ConfigEntry<bool> isCompanionSort;
+
         public static ConfigEntry<bool> isFixPullBow;
 
         public static ConfigEntry<bool> isOnlyPlayerAndCompanion;
@@ -66,6 +68,7 @@ namespace FixPatch
             BepInExPlugin.isFixAffixes = base.Config.Bind<bool>("Options", "IsFixAffixes", true, "fix weapon and armor 's affixes.");
             BepInExPlugin.isFixBugs = base.Config.Bind<bool>("Options", "IsFixBugs", false, "fix some bugs.");
             BepInExPlugin.isFixAI = base.Config.Bind<bool>("Options", "isFixAI", true, "fix compation's ai.");
+            BepInExPlugin.isCompanionSort = base.Config.Bind<bool>("Options", "IsCompanionSort", true, "can change companion's position.");
             BepInExPlugin.isFixPullBow = base.Config.Bind<bool>("Options", "isFixPullBow", true, "fix compation's ai.");
             BepInExPlugin.isOnlyPlayerAndCompanion = base.Config.Bind<bool>("Options", "IsOnlyPlayerAndCompanion", true, "only player and companion enable pull bow append damage and element damage.");
             BepInExPlugin.PullBowDamageRate = base.Config.Bind<float>("Options", "PullBowDamageRate", 0.1f, "Bow accumulate increases damage rate.Default:10%/0.1s");
@@ -73,6 +76,26 @@ namespace FixPatch
             BepInExPlugin.NoWeaponMsg = base.Config.Bind<string>("Options", "NoWeaponMsg", ": I need a weapon or arrows.", "message");
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             BepInExPlugin.Debug("Plugin awake", true);
+        }
+
+        private void Update()
+        {
+            if(BepInExPlugin.isCompanionSort.Value && CompanionListPatch.UIInventoryIsOpen)
+            {
+                var key = new BepInEx.Configuration.KeyboardShortcut(KeyCode.LeftArrow, KeyCode.LeftControl);
+                if (key.IsDown())
+                {
+                    CompanionListPatch.OnChangeToLeft();
+                }
+                else
+                {
+                    key = new BepInEx.Configuration.KeyboardShortcut(KeyCode.RightArrow, KeyCode.LeftControl);
+                    if (key.IsDown())
+                    {
+                        CompanionListPatch.OnChangeToRight();
+                    }
+                }
+            }
         }
 
         [HarmonyPatch(typeof(UILoading), "OpenLoading", new Type[] { typeof(Transform) })]

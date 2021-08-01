@@ -40,6 +40,9 @@
       <HintPath>..\lib\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\lib\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\lib\BepInEx.dll</HintPath>
       <Private>False</Private>
@@ -92,6 +95,7 @@
     <Compile Include="GlobalPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PullBowPatch.cs" />
+    <Compile Include="CompanionListPatch.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="WeaponPatch.cs" />
   </ItemGroup>

@@ -87,8 +87,7 @@ namespace AutoPickup
                         Global.code.uiCombat.AddRollHint(BepInExPlugin.onlyGoldAndCrystalsDisableStr.Value, Color.green);
                     }
                 }
-            }
-            if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha1, KeyCode.LeftControl).IsDown())
+            } else if (new BepInEx.Configuration.KeyboardShortcut(KeyCode.Alpha1, KeyCode.LeftControl).IsDown())
             {
                 BepInExPlugin.filterRarity.Value = 1;
                 if (Global.code != null && Global.code.uiCombat != null)
