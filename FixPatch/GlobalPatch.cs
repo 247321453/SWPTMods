@@ -19,67 +19,83 @@ namespace FixPatch
         Charge,
         GoThereAndStand,
     }
-    class GlobalPatch {
-        public static CompanionCmd sStatus = CompanionCmd.FollowMe;
-    }
-    /*
-    #region AI
-    [HarmonyPatch(typeof(ID), "AddHealth")]
-    class ID_AddHealth_Patch
+    class GlobalPatch
     {
-
-        private static void Postfix(ID __instance, float pt, Transform source)
+        public static CompanionCmd sStatus = CompanionCmd.FollowMe;
+        public static void Command(Monster component, bool charge, Transform move)
         {
-            if (isDebug.Value)
+            if (component)
             {
-                if (__instance.GetComponent<Monster>())
-                {
-                    Debug(__instance.name + " AddHealth " + pt);
-                }
+                component.charge = charge;
+                component.movingToTarget = move;
             }
-            if (!BepInExPlugin.modEnabled.Value)
+        }
+        public static void Command(Companion component, bool charge, Transform move)
+        {
+            if (component)
             {
-                return;
-            }
-            if (!BepInExPlugin.isFixAI.Value)
-            {
-                return;
-            }
-            if (!__instance.canaddhealth)
-            {
-                return;
-            }
-            if (__instance.damageSource && __instance.GetComponent<Monster>() == null)
-            {
-                    if (__instance.damageSource.GetComponent<ID>() == Player.code._ID)
-                    {
-                        return;
-                    }
-                    var customization = __instance.GetComponent<CharacterCustomization>();
-                    if (!customization) return;
-                    var companion = customization.GetComponent<Companion>();
-                    if (!companion) return;
-
-                    //随从受伤
-                    //if (companion.charge)
-                    //{
-                    //    companion.target = __instance.damageSource;
-                    //    BepInExPlugin.Debug(companion.name + " change target", true);
-                    //}
-                    if (__instance.health > 0 && (__instance.health / __instance.maxHealth) < 0.1f)
-                    {
-                        //TODO 逃跑
-                        //随从受伤
-                        Global.code.uiCombat.AddRollHint(companion.name + ":Help me!", Color.red);
-                    }
-                //else if(pt < 0){
-                //    Global.code.uiCombat.AddRollHint(__instance.name + " add health :"+pt, Color.red);
-                //}
+                component.charge = charge;
+                component.movingToTarget = move;
             }
         }
 
+        public static void Command2(Monster component, bool charge, Transform move)
+        {
+            if (component)
+            {
+                component.charge = charge;
+                component.movingToTarget = move;
+            }
+        }
+        public static void Command2(Companion component, bool charge, Vector3 move)
+        {
+            if (component)
+            {
+                component.charge = charge;
+                if (move == Vector3.zero)
+                {
+                    component.movingToTarget = null;
+                }
+                else
+                {
+                    component.movingToTarget = new GameObject
+                    {
+                        transform = { position = new Vector3(move.x, move.y, move.z) }
+                    }.transform;
+                }
+            }
+        }
+        public static void Command2(Monster component, bool charge, Vector3 move)
+        {
+            if (component)
+            {
+                component.charge = charge;
+                if (move == Vector3.zero)
+                {
+                    component.movingToTarget = null;
+                }
+                else
+                {
+                    component.movingToTarget = new GameObject
+                    {
+                        transform = { position = new Vector3(move.x, move.y, move.z) }
+                    }.transform;
+                }
+            }
+        }
+
+        public static bool IsInParty(Companion comp)
+        {
+            foreach (Transform transform in Global.code.playerCombatParty.items)
+            {
+                if (transform && comp == transform.GetComponent<Companion>())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
-    */
     [HarmonyPatch(typeof(Global), "CommandGoThereAndStand")]
     class Global_CommandGoThereAndStand_Patch
     {
@@ -93,60 +109,43 @@ namespace FixPatch
             {
                 return true;
             }
-            BepInExPlugin.Debug("CommandGoThereAndStand:0");
             GlobalPatch.sStatus = CompanionCmd.GoThereAndStand;
-            if (Player.code == null || Player.code.transform == null || __instance.friendlies == null || __instance.friendlies.items == null || RM.code == null || RM.code.sndStand == null)
+            if (Player.code == null || Player.code.transform == null || RM.code == null || RM.code.sndStand == null)
             {
                 return true;
             }
-            BepInExPlugin.Debug("CommandGoThereAndStand:1");
             RM.code.PlayOneShot(RM.code.sndStand);
-            BepInExPlugin.Debug("CommandGoThereAndStand:1");
             try
             {
-                foreach (Transform transform in __instance.friendlies.items)
+                if (__instance.friendlies != null && __instance.friendlies.items != null)
                 {
-                    if (transform && transform != Player.code.transform)
+                    foreach (Transform transform in __instance.friendlies.items)
                     {
-                        BepInExPlugin.Debug("CommandGoThereAndStand:transform");
-                        var component = transform.GetComponent<Companion>();
-                        var component2 = transform.GetComponent<Monster>();
-                        if (component)
+                        if (transform)
                         {
-                            BepInExPlugin.Debug("CommandGoThereAndStand:Companion:" + component.name);
-                            component.target = null;
-                            component.movingToTarget = new GameObject
+                            BepInExPlugin.Debug("CommandGoThereAndStand:transform:Monster");
+                            var monster = transform.GetComponent<Monster>();
+                            if (monster)
                             {
-                                transform = { position = new Vector3()
-                                    {
-                                        x = Player.code.transform.position.x,
-                                        y = Player.code.transform.position.y,
-                                        z = Player.code.transform.position.z
-                                    }
-                                }
-                            }.transform;
-                            component.charge = false;
-                            var charactor = component.GetComponent<CharacterCustomization>();
-                            if (charactor && !CharacterCustomizationUtil.WeaponIsBow(charactor))
-                            {
-                                charactor.Block();
+                                monster.target = null;
                             }
+                            GlobalPatch.Command2(monster, false, Player.code.transform.position);
                         }
-                        if (component2)
+                    }
+                }
+                if (__instance.playerCombatParty != null && __instance.playerCombatParty.items != null)
+                {
+                    foreach (Transform transform in Global.code.playerCombatParty.items)
+                    {
+                        if (transform)
                         {
-                            BepInExPlugin.Debug("CommandGoThereAndStand:Monster:" + component.name);
-                            component2.target = null;
-                            component2.movingToTarget = new GameObject
+                            BepInExPlugin.Debug("CommandGoThereAndStand:transform:Companion");
+                            var comp = transform.GetComponent<Companion>();
+                            if (comp)
                             {
-                                transform = {   position = new Vector3()
-                                    {
-                                        x = Player.code.transform.position.x,
-                                        y = Player.code.transform.position.y,
-                                        z = Player.code.transform.position.z
-                                    }
-                                }
-                            }.transform;
-                            component2.charge = false;
+                                comp.target = null;
+                            }
+                            GlobalPatch.Command2(comp, false, Player.code.transform.position);
                         }
                     }
                 }
@@ -165,69 +164,113 @@ namespace FixPatch
     {
         private static bool Prefix(Global __instance)
         {
-            if (BepInExPlugin.modEnabled.Value && BepInExPlugin.isFixAI.Value)
+            if (!BepInExPlugin.modEnabled.Value)
             {
-               GlobalPatch.sStatus = CompanionCmd.Charge;
-                RM.code.PlayOneShot(RM.code.sndCharge);
-                foreach (Transform transform in __instance.friendlies.items)
+                return true;
+            }
+            if (!BepInExPlugin.isFixAI.Value)
+            {
+                return true;
+            }
+            GlobalPatch.sStatus = CompanionCmd.Charge;
+            if (Player.code == null || Player.code.transform == null || RM.code == null || RM.code.sndCharge == null)
+            {
+                return true;
+            }
+            RM.code.PlayOneShot(RM.code.sndCharge);
+            try
+            {
+                if (__instance.friendlies != null && __instance.friendlies.items != null)
                 {
-                    if (transform)
+                    foreach (Transform transform in __instance.friendlies.items)
                     {
-                        Companion component = transform.GetComponent<Companion>();
-                        Monster component2 = transform.GetComponent<Monster>();
-                        if (component)
+                        if (transform)
                         {
-                            component.movingToTarget = null;
-                            component.charge = true;
-                        }
-                        if (component2)
-                        {
-                            component2.movingToTarget = null;
-                            component2.charge = true;
+                            BepInExPlugin.Debug("CommandCharge:transform:Monster");
+                            GlobalPatch.Command(transform.GetComponent<Monster>(), true, null);
                         }
                     }
                 }
-                __instance.uiCombat.AddPrompt(Localization.GetContent("Charge", Array.Empty<object>()));
-                return false;
+                if (__instance.playerCombatParty != null && __instance.playerCombatParty.items != null)
+                {
+                    foreach (Transform transform in Global.code.playerCombatParty.items)
+                    {
+                        if (transform)
+                        {
+                            BepInExPlugin.Debug("CommandCharge:transform:Companion");
+                            GlobalPatch.Command(transform.GetComponent<Companion>(), true, null);
+                        }
+                    }
+                }
             }
-            return true;
+            catch (Exception e)
+            {
+                BepInExPlugin.Error("CommandCharge\n" + e.Message + "\n" + e.StackTrace + "\n" + e.Source);
+            }
+            __instance.uiCombat.AddPrompt(Localization.GetContent("Charge", Array.Empty<object>()));
+            return false;
         }
     }
 
     [HarmonyPatch(typeof(Global), "CommandFollowMe")]
     class Global_CommandFollowMe_Patch
     {
-        private static void Prefix(Global __instance)
+        private static bool Prefix(Global __instance)
         {
             if (!BepInExPlugin.modEnabled.Value)
             {
-                return;
+                return true;
             }
             if (!BepInExPlugin.isFixAI.Value)
             {
-                return;
+                return true;
             }
             GlobalPatch.sStatus = CompanionCmd.FollowMe;
-            if (__instance.friendlies == null)
+            if (Player.code == null || Player.code.transform == null || RM.code == null || RM.code.sndFollow == null)
             {
-                return;
+                return true;
             }
-            foreach (Transform transform in __instance.friendlies.items)
+            RM.code.PlayOneShot(RM.code.sndFollow);
+            try
             {
-                if (transform && transform != Player.code.transform)
+                if (__instance.friendlies != null && __instance.friendlies.items != null)
                 {
-                    Companion component = transform.GetComponent<Companion>();
-                    Monster component2 = transform.GetComponent<Monster>();
-                    if (component)
+                    foreach (Transform transform in __instance.friendlies.items)
                     {
-                        component.target = null;
+                        if (transform)
+                        {
+                            BepInExPlugin.Debug("CommandFollowMe:transform:Monster");
+                            var monster = transform.GetComponent<Monster>();
+                            if (monster) {
+                                monster.target = null;
+                            }
+                            GlobalPatch.Command(monster, false, Player.code.transform);
+                        }
                     }
-                    if (component2)
+                }
+                if (__instance.playerCombatParty != null && __instance.playerCombatParty.items != null)
+                {
+                    foreach (Transform transform in Global.code.playerCombatParty.items)
                     {
-                        component2.target = null;
+                        if (transform)
+                        {
+                            BepInExPlugin.Debug("CommandFollowMe:transform:Companion");
+                            var comp = transform.GetComponent<Companion>();
+                            if (comp)
+                            {
+                                comp.target = null;
+                            }
+                            GlobalPatch.Command(comp, false, Player.code.transform);
+                        }
                     }
                 }
             }
+            catch (Exception e)
+            {
+                BepInExPlugin.Error("CommandFollowMe\n" + e.Message + "\n" + e.StackTrace + "\n" + e.Source);
+            }
+            __instance.uiCombat.AddPrompt(Localization.GetContent("Follow"));
+            return false;
         }
     }
 

@@ -14,8 +14,21 @@ namespace FixPatch
 {
     public static class CharacterCustomizationUtil
     {
-        public static float MIN_MELEE_ATTACK_DISTANCE = 3f;
-        public static float MIN_BOW_ATTACK_DISTANCE = 7f;
+        public const float MIN_MELEE_ATTACK_DISTANCE = 3.5f;
+        public const float MIN_BOW_ATTACK_DISTANCE = 7f;
+
+        public static void CancelMagicAndPullBow(CharacterCustomization character) {
+            //取消释放魔法
+            if (character.curCastingMagic)
+            {
+                character.curCastingMagic.CancelCast();
+            }
+            //取消拉弓
+            if (character.isPullingBow)
+            {
+                character.CancelPullBow();
+            }
+        }
         /// <summary>
         /// 切换到近战武器
         /// </summary>
@@ -23,11 +36,15 @@ namespace FixPatch
         {
             if ((index == -1 || index == 1) && __instance.weapon && __instance.weapon.GetComponent<Weapon>().weaponType != WeaponType.bow)
             {
+                __instance.Unblock();
+                CharacterCustomizationUtil.CancelMagicAndPullBow(__instance);
                 __instance.DrawWeapon(1);
                 return true;
             }
             else if ((index == -1 || index == 2) && __instance.weapon2 && __instance.weapon2.GetComponent<Weapon>().weaponType != WeaponType.bow)
             {
+                __instance.Unblock();
+                CharacterCustomizationUtil.CancelMagicAndPullBow(__instance);
                 __instance.DrawWeapon(2);
                 return true;
             }
@@ -48,11 +65,15 @@ namespace FixPatch
             }
             if (__instance.weapon && __instance.weapon.GetComponent<Weapon>().weaponType == WeaponType.bow)
             {
+                __instance.Unblock();
+                CharacterCustomizationUtil.CancelMagicAndPullBow(__instance);
                 __instance.DrawWeapon(1);
                 return 1;
             }
             else if (__instance.weapon2 && __instance.weapon2.GetComponent<Weapon>().weaponType == WeaponType.bow)
             {
+                __instance.Unblock();
+                CharacterCustomizationUtil.CancelMagicAndPullBow(__instance);
                 __instance.DrawWeapon(2);
                 return 2;
             }

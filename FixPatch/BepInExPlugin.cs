@@ -75,6 +75,64 @@ namespace FixPatch
             BepInExPlugin.Debug("Plugin awake", true);
         }
 
+        [HarmonyPatch(typeof(UILoading), "OpenLoading", new Type[] { typeof(Transform) })]
+        private static class UILoading_OpenLoading_Patch
+        {
+            private static void Prefix(UILoading __instance, Transform location)
+            {
+                Debug("OpenLoading#locationType=" + location.GetComponent<Location>().locationType);
+            }
+        }
+        [HarmonyPatch(typeof(Companion), "CSFast")]
+        private static class Companion_CSFast_Patch
+        {
+            private static bool Prefix(Companion __instance)
+            {
+                if (!BepInExPlugin.modEnabled.Value)
+                {
+                    return true;
+                }
+                if (!BepInExPlugin.isFixAI.Value)
+                {
+                    return true;
+                }
+                if (__instance.gameObject.tag == "D")
+                {
+                    return true;
+                }
+                if (!GlobalPatch.IsInParty(__instance))
+                {
+                    //不在队伍
+                    return false;
+                }
+                return true;
+            }
+        }
+        [HarmonyPatch(typeof(Companion), "CS5")]
+        private static class Companion_CS5_Patch
+        {
+            private static bool Prefix(Companion __instance)
+            {
+                if (!BepInExPlugin.modEnabled.Value)
+                {
+                    return true;
+                }
+                if (!BepInExPlugin.isFixAI.Value)
+                {
+                    return true;
+                }
+                if (__instance.gameObject.tag == "D")
+                {
+                    return true;
+                }
+                if (!GlobalPatch.IsInParty(__instance))
+                {
+                    //不在队伍
+                    return false;
+                }
+                return true;
+            }
+        }
         //SetDestination
         [HarmonyPatch(typeof(Companion), "CS")]
         private static class Companion_CS_Patch
@@ -95,9 +153,15 @@ namespace FixPatch
                 {
                     return true;
                 }
-                if (Global.code.curlocation && Global.code.curlocation.locationType == LocationType.home && !__instance.customization.interactingObject)
+                if (Global.code.curlocation && Global.code.curlocation.locationType == LocationType.home)
                 {
+                    //在家里
                     return true;
+                }
+                if (!GlobalPatch.IsInParty(__instance))
+                {
+                    //不在队伍
+                    return false;
                 }
                 try
                 {
@@ -139,11 +203,15 @@ namespace FixPatch
 
                             if (__instance.curEnemyDist > __instance.attackDist && __instance.curEnemyDist < BOW_ATTACK_LIMIT && character && character.storage.GetItemCount("Arrow") > 0)
                             {
-                                //大于攻击范围，但是有弓箭
-                                int bowIndex = CharacterCustomizationUtil.ChangeBowWeapon(character);
-                                if (bowIndex > 0)
+                                //释放过程不处理
+                                if (character.curCastingMagic == null)
                                 {
-                                    Debug(character.characterName + " change weapon to bow:" + bowIndex + ", distance=" + __instance.curEnemyDist);
+                                    //大于攻击范围，但是有弓箭
+                                    int bowIndex = CharacterCustomizationUtil.ChangeBowWeapon(character);
+                                    if (bowIndex > 0)
+                                    {
+                                        Debug(character.characterName + " change weapon to bow:" + bowIndex + ", distance=" + __instance.curEnemyDist);
+                                    }
                                 }
                             }
 
@@ -152,23 +220,41 @@ namespace FixPatch
                                 bool skipAttack = false;
                                 if (CharacterCustomizationUtil.WeaponIsBow(character))
                                 {
-
                                     if (GlobalPatch.sStatus == CompanionCmd.GoThereAndStand)
                                     {
-                                        if (__instance.curEnemyDist <= 4f)
+                                        if (__instance.curEnemyDist <= CharacterCustomizationUtil.MIN_MELEE_ATTACK_DISTANCE)
                                         {
                                             Debug(character.characterName + " change bow to other weapon, curEnemyDist=" + __instance.curEnemyDist);
                                             //距离太近了，切换武器
-                                            skipAttack = CharacterCustomizationUtil.ChangeMeleeWeapon(character);
+                                            if (CharacterCustomizationUtil.ChangeMeleeWeapon(character))
+                                            {
+                                                character.Block();
+                                            }
                                         }
+                                        //else if (__instance.curEnemyDist <= CharacterCustomizationUtil.MIN_BOW_ATTACK_DISTANCE)
+                                        // {
+                                        //     //距离太近了，随机移动
+                                        //     skipAttack = true;
+                                        //     CompanionUtil.RandomMove(__instance, Player.code.transform.position);
+                                        //     Debug(character.characterName + " random move, curEnemyDist=" + __instance.curEnemyDist);
+                                        //  }
                                     }
                                     else
                                     {
-                                        //远离怪物
-                                        if (__instance.curEnemyDist <= 6f)
+                                        if (__instance.curEnemyDist <= CharacterCustomizationUtil.MIN_MELEE_ATTACK_DISTANCE && GlobalPatch.sStatus == CompanionCmd.Charge)
+                                        {
+                                            //太近了，并且是冲锋模式
+                                            if (CharacterCustomizationUtil.ChangeMeleeWeapon(character))
+                                            {
+                                                character.Block();
+                                            }
+                                        }
+                                        else if (__instance.curEnemyDist <= CharacterCustomizationUtil.MIN_BOW_ATTACK_DISTANCE)
                                         {
                                             //距离太近了，后退
                                             skipAttack = true;
+                                            character.Unblock();
+                                            CharacterCustomizationUtil.CancelMagicAndPullBow(character);
                                             CompanionUtil.Backoff(__instance);
                                             Debug(character.characterName + " back off, curEnemyDist=" + __instance.curEnemyDist);
                                         }
