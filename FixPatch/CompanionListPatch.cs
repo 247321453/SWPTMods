@@ -1,15 +1,6 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
-using HarmonyLib;
-using System;
+﻿using HarmonyLib;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.UI;
-using static HarmonyLib.AccessTools;
 
 namespace FixPatch
 {
@@ -93,7 +84,7 @@ namespace FixPatch
             CompanionListPatch.UIInventoryIsOpen = false;
         }
     }
-
+    /*
     [HarmonyPatch(typeof(Scene), "Start")]
     class Scene_Start_Patch
     {
@@ -122,6 +113,54 @@ namespace FixPatch
             }
         }
     }
+
+    [HarmonyPatch(typeof(UICombatParty), nameof(UICombatParty.Refresh))]
+    class UICombatParty_Refresh_Patch
+    {
+        static void Prefix(UICombatParty __instance)
+        {
+            if (!BepInExPlugin.isCompanionSort.Value)
+            {
+                return;
+            }
+
+            foreach (Transform t in __instance.locators)
+            {
+                BepInExPlugin.Debug($"{t.position}, {t.rotation}");
+            }
+
+            List<Transform> locators = new List<Transform>(__instance.locators);
+            while (locators.Count <= Global.code.playerCombatParty.items.Count)
+            {
+                Transform t = UnityEngine.Object.Instantiate(locators[locators.Count - 1], locators[locators.Count - 1].parent);
+                locators.Add(t);
+            }
+            __instance.locators = locators.ToArray();
+        }
+        static void Postfix(UICombatParty __instance)
+        {
+            if (!BepInExPlugin.isCompanionSort.Value)
+            {
+                return;
+            }
+
+            for (int k = 3; k < BepInExPlugin.CompanionPartySize.Value; k++)
+            {
+                Transform transform = UnityEngine.Object.Instantiate(__instance.iconPrefab);
+                transform.SetParent(__instance.iconHolder);
+                transform.localScale = Vector3.one;
+                if (k < Global.code.playerCombatParty.items.Count)
+                {
+                    Transform unit = Global.code.playerCombatParty.items[k];
+                    transform.GetComponent<CompanionSelectionIcon>().Initiate(unit, false);
+                }
+                else
+                {
+                    transform.GetComponent<CompanionSelectionIcon>().Initiate(null, false);
+                }
+            }
+        }
+    }
     [HarmonyPatch(typeof(Global), "AddCompanionToPlayerArmy")]
     class Global_AddCompanionToPlayerArmy_Patch
     {
@@ -134,12 +173,16 @@ namespace FixPatch
             __instance.companions.AddItem(companion);
             companion.transform.SetParent(__instance.transform);
             __instance.playerCombatParty.ArrangeItems();
-            if (CompanionListPatch.lastPartys.Contains(companion.name))
+            bool isNull = CompanionListPatch.lastPartys.Count == 0;
+            if (isNull || CompanionListPatch.lastPartys.Contains(companion.name))
             {
-                //TODO 限制数量？
-                if (!Global.code.playerCombatParty.items.Exists(t => t.name == companion.name))
+                if (Global.code.playerCombatParty.items.Count < BepInExPlugin.CompanionPartySize.Value)
                 {
-                    __instance.playerCombatParty.AddItemDifferentObject(companion);
+                    //TODO 适配组队限制数量
+                    if (!Global.code.playerCombatParty.items.Exists(t => t.name == companion.name))
+                    {
+                        __instance.playerCombatParty.AddItemDifferentObject(companion);
+                    }
                 }
             }
             return false;
@@ -159,30 +202,6 @@ namespace FixPatch
                     CompanionListPatch.lastPartys.Clear();
                     CompanionListPatch.lastPartys.AddRange(ES2.LoadList<string>(id));
                     BepInExPlugin.Debug(__instance.GetFolderName() + " read last partys=" + string.Join(",", CompanionListPatch.lastPartys));
-                    /*
-                     if (CompanionListPatch.lastPartys.Count > 0)
-                     {
-                         BepInExPlugin.Debug(__instance.GetFolderName() + " all companions="+ Global.code.companions.items.Count);
-                         Global.code.playerCombatParty.ClearItems();
-                         foreach (var name in CompanionListPatch.lastPartys)
-                         {
-                             var item = Global.code.companions.GetItemWithName(name);
-                             if (item)
-                             {
-                                 Global.code.playerCombatParty.AddItemDifferentObject(item);
-                             }
-                         }
-                         BepInExPlugin.Debug(__instance.GetFolderName() + " read last partys=" + string.Join(",", CompanionListPatch.lastPartys) + ", size=" + Global.code.playerCombatParty.items.Count);
-                         if (Global.code.playerCombatParty.items.Count == 0) {
-                             foreach (var item in Global.code.companions.items)
-                             {
-                                 if (item)
-                                 {
-                                     BepInExPlugin.Debug(__instance.GetFolderName() + " companions item=" + item.name);
-                                 }
-                             }
-                         }
-                     }*/
                 }
             }
         }
@@ -204,4 +223,5 @@ namespace FixPatch
             }
         }
     }
+*/
 }

@@ -7,8 +7,8 @@
     <ProjectGuid>{76FCAFE5-AB80-4BC9-9434-B8E14EB7D7CF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HideHeadgear</RootNamespace>
-    <AssemblyName>HideHeadgear</AssemblyName>
+    <RootNamespace>GearTypeDisplay</RootNamespace>
+    <AssemblyName>GearTypeDisplay</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

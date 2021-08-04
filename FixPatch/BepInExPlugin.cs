@@ -13,7 +13,7 @@ using static HarmonyLib.AccessTools;
 
 namespace FixPatch
 {
-    [BepInPlugin("caicai.FixPatch", "Fix Patch", "0.1.4")]
+    [BepInPlugin("caicai.FixPatch", "Fix Patch", "0.1.6")]
     public class BepInExPlugin : BaseUnityPlugin
     {
         private static BepInExPlugin context;
@@ -26,13 +26,13 @@ namespace FixPatch
 
         public static ConfigEntry<bool> isFixAffixes;
 
-        public static ConfigEntry<bool> isFixBugs;
-
         public static ConfigEntry<bool> isFixAI;
 
         public static ConfigEntry<bool> isCompanionSort;
 
         public static ConfigEntry<bool> isFixPullBow;
+
+        public static ConfigEntry<int> CompanionPartySize;
 
         public static ConfigEntry<bool> isOnlyPlayerAndCompanion;
 
@@ -66,10 +66,11 @@ namespace FixPatch
             //   BepInExPlugin.elementDamageEnable = base.Config.Bind<bool>("Options", "ElementDamageEnable", false, "Enable elemental damage of weapon");
             //    BepInExPlugin.elementDamageRate = base.Config.Bind<float>("Options", "ElementDamageRate", 0.1f, "magic attributes can increase the elemental damage of weapons");
             BepInExPlugin.isFixAffixes = base.Config.Bind<bool>("Options", "IsFixAffixes", true, "fix weapon and armor 's affixes.");
-            BepInExPlugin.isFixBugs = base.Config.Bind<bool>("Options", "IsFixBugs", false, "fix some bugs.");
+         //   BepInExPlugin.isFixBugs = base.Config.Bind<bool>("Options", "IsFixBugs", false, "fix some bugs.");
             BepInExPlugin.isFixAI = base.Config.Bind<bool>("Options", "isFixAI", true, "fix compation's ai.");
             BepInExPlugin.isCompanionSort = base.Config.Bind<bool>("Options", "IsCompanionSort", true, "can change companion's position.");
             BepInExPlugin.isFixPullBow = base.Config.Bind<bool>("Options", "isFixPullBow", true, "fix compation's ai.");
+            BepInExPlugin.CompanionPartySize = base.Config.Bind<int>("Options", "CompanionPartySize", 3, "compation party size.");
             BepInExPlugin.isOnlyPlayerAndCompanion = base.Config.Bind<bool>("Options", "IsOnlyPlayerAndCompanion", true, "only player and companion enable pull bow append damage and element damage.");
             BepInExPlugin.PullBowDamageRate = base.Config.Bind<float>("Options", "PullBowDamageRate", 0.1f, "Bow accumulate increases damage rate.Default:10%/0.1s");
             BepInExPlugin.PullBowMaxTime = base.Config.Bind<int>("Options", "PullBowMaxTime", 3, "pull bow max time, default is 3s");
@@ -80,7 +81,7 @@ namespace FixPatch
 
         private void Update()
         {
-            if(BepInExPlugin.isCompanionSort.Value && CompanionListPatch.UIInventoryIsOpen)
+            if (BepInExPlugin.isCompanionSort.Value && CompanionListPatch.UIInventoryIsOpen)
             {
                 var key = new BepInEx.Configuration.KeyboardShortcut(KeyCode.LeftArrow, KeyCode.LeftControl);
                 if (key.IsDown())

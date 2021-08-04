@@ -13,6 +13,7 @@ using static HarmonyLib.AccessTools;
 
 namespace FixPatch
 {
+    #region fix
     enum CompanionCmd
     {
         FollowMe,
@@ -96,7 +97,9 @@ namespace FixPatch
             return false;
         }
     }
-    [HarmonyPatch(typeof(Global), "CommandGoThereAndStand")]
+    #endregion
+
+    [HarmonyPatch(typeof(Global), nameof(Global.CommandGoThereAndStand))]
     class Global_CommandGoThereAndStand_Patch
     {
         private static bool Prefix(Global __instance)
@@ -159,7 +162,7 @@ namespace FixPatch
         }
 
     }
-    [HarmonyPatch(typeof(Global), "CommandCharge")]
+    [HarmonyPatch(typeof(Global), nameof(Global.CommandCharge))]
     class Global_CommandCharge_Patch
     {
         private static bool Prefix(Global __instance)
@@ -212,7 +215,7 @@ namespace FixPatch
         }
     }
 
-    [HarmonyPatch(typeof(Global), "CommandFollowMe")]
+    [HarmonyPatch(typeof(Global), nameof(Global.CommandFollowMe))]
     class Global_CommandFollowMe_Patch
     {
         private static bool Prefix(Global __instance)

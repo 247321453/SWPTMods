@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace FixPatch
 {
-
     [HarmonyPatch(typeof(RM), "LoadResources")]
     class RM_LoadResources_Patch
     {
@@ -42,5 +41,4 @@ namespace FixPatch
             }
         }
     }
-
 }

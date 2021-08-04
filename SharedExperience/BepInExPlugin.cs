@@ -78,7 +78,7 @@ namespace SharedExperience
             }
         }
 
-        [HarmonyPatch(typeof(Monster), "Die")]
+        [HarmonyPatch(typeof(Monster), nameof(Monster.Die))]
         private static class Monster_Die_Patch
         {
             private static void Prefix(Monster __instance)

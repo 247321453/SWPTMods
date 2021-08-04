@@ -138,27 +138,28 @@ namespace AutoPickup
         }
 
 
-        [HarmonyPatch(typeof(Item), "Drop")]
+        [HarmonyPatch(typeof(Item),nameof(Item.Drop))]
         private static class Item_Drop_Patch
         {
             private static bool Prefix(Item __instance)
             {
                 if (BepInExPlugin.modEnabled.Value)
                 {
-                    if (__instance.itemName == "Crystals" || __instance.itemName == "Gold")
+                    var name = GetName(__instance);
+                    if (name == "Crystals" || name == "Gold")
                     {
                         if (Global.code.AddItemToPlayerStorage(__instance.transform, true))
                         {
-                            Debug(__instance.itemName + " auto pick up");
+                            Debug(name + " auto pick up");
                             __instance.Pickup();
                             return false;
                         }
                     }
-                    else if (!BepInExPlugin.isOnlyGoldAndCrystals.Value && ((int)__instance.rarity >= BepInExPlugin.filterRarity.Value || isBook(__instance.itemName)))
+                    else if (!BepInExPlugin.isOnlyGoldAndCrystals.Value && ((int)__instance.rarity >= BepInExPlugin.filterRarity.Value || isBook(name)))
                     {
                         if (Global.code.AddItemToPlayerStorage(__instance.transform, true))
                         {
-                            Debug(__instance.itemName + " auto pick up, ratity=" + __instance.rarity);
+                            Debug(name + " auto pick up, ratity=" + __instance.rarity);
                             __instance.Pickup();
                             return false;
                         }
@@ -166,6 +167,10 @@ namespace AutoPickup
                 }
                 return true;
             }
+        }
+
+        private static string GetName(Item item) {
+            return item.name;
         }
 
         private static bool isBook(string name)

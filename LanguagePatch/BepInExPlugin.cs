@@ -29,7 +29,6 @@ namespace LanguagePatch
 
         public static ConfigEntry<KeyCode> saveMissLocalizetionHotKey;
 
-        private static int sMaxID;
 
         public static void Debug(string str = "", bool pref = true)
         {
@@ -66,7 +65,7 @@ namespace LanguagePatch
                 if (key.IsDown())
                 {
                     //
-                    InitLocalizetionText(true);
+                    Localization_Patch.InitLocalizetionText(true);
                     if (Global.code != null && Global.code.uiCombat != null)
                     {
                         Global.code.uiCombat.AddRollHint("Reload Localizetion.txt", Color.white);
@@ -92,10 +91,11 @@ namespace LanguagePatch
             //    "ENGLISH": "Twitch Dagger",
             //    "RUSSIAN": "Twitch Dagger"
             //  },
+            Dictionary<string, List<string>> dic = Localization_Patch.LocalizationDic;
             foreach (var k in RM.code.allWeapons.items)
             {
                 string name = k.GetComponent<Item>().name;
-                if (!LocalizationDic.ContainsKey(name))
+                if (!dic.ContainsKey(name.Trim()))
                 {
                     if (!missTextKeys.Contains(name))
                     {
@@ -106,7 +106,7 @@ namespace LanguagePatch
             foreach (var k in RM.code.allAffixes.items)
             {
                 string name = k.GetComponent<Item>().name;
-                if (!LocalizationDic.ContainsKey(name))
+                if (!dic.ContainsKey(name.Trim()))
                 {
                     if (!missTextKeys.Contains(name))
                     {
@@ -117,7 +117,7 @@ namespace LanguagePatch
             foreach (var k in RM.code.allEnemies.items)
             {
                 string name = k.GetComponent<Item>().name;
-                if (!LocalizationDic.ContainsKey(name))
+                if (!dic.ContainsKey(name.Trim()))
                 {
                     if (!missTextKeys.Contains(name))
                     {
@@ -128,7 +128,7 @@ namespace LanguagePatch
             foreach (var k in RM.code.allArmors.items)
             {
                 string name = k.GetComponent<Item>().name;
-                if (!LocalizationDic.ContainsKey(name))
+                if (!dic.ContainsKey(name.Trim()))
                 {
                     if (!missTextKeys.Contains(name))
                     {
@@ -139,7 +139,7 @@ namespace LanguagePatch
             foreach (var k in RM.code.allLingeries.items)
             {
                 string name = k.GetComponent<Item>().name;
-                if (!LocalizationDic.ContainsKey(name))
+                if (!dic.ContainsKey(name.Trim()))
                 {
                     if (!missTextKeys.Contains(name))
                     {
@@ -150,7 +150,7 @@ namespace LanguagePatch
             foreach (var k in RM.code.allItems.items)
             {
                 string name = k.GetComponent<Item>().name;
-                if (!LocalizationDic.ContainsKey(name))
+                if (!dic.ContainsKey(name.Trim()))
                 {
                     if (!missTextKeys.Contains(name))
                     {
@@ -159,7 +159,7 @@ namespace LanguagePatch
                 }
             }
             int count = missTextKeys.Count;
-            sMaxID++;
+            Localization_Patch.sMaxID++;
             foreach (string k in missTextKeys)
             {
                 if (IsNumber(k))
@@ -168,7 +168,7 @@ namespace LanguagePatch
                 }
                 string name = k.Replace("_", " ").Trim();
                 lines.Add("  \"" + k + "\": {");
-                lines.Add("    \"ID\": " + (sMaxID++) + ",");
+                lines.Add("    \"ID\": " + (Localization_Patch.sMaxID++) + ",");
                 lines.Add("    \"KEY\": \"" + k + "\",");
                 lines.Add("    \"CHINESE\": \"" + name + "\",");
                 lines.Add("    \"ENGLISH\": \"" + name + "\",");
@@ -198,144 +198,6 @@ namespace LanguagePatch
                 }
             }
             return true;
-        }
-
-        private static bool sInit = false;
-        private static Dictionary<string, List<string>> LocalizationDic = new Dictionary<string, List<string>>();
-
-        private static void InitLocalizetionText(bool force = false)
-        {
-            if (!force)
-            {
-                if (sInit)
-                {
-                    return;
-                }
-            }
-            sInit = true;
-            string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Localization.txt");
-            BepInExPlugin.Debug("read " + path, true);
-            Dictionary<string, Table_Localization> LocalizationData = new Dictionary<string, Table_Localization>();
-            try
-            {
-                if (File.Exists(path))
-                {
-                    string json = File.ReadAllText(path, Encoding.UTF8);
-                    LocalizationData = TableManager.DeserializeStringTODIc<string, Table_Localization>(json);
-                }
-            }
-            catch (Exception e)
-            {
-                Error("read Localization error:" + path);
-                Error(e.Message);
-                Error(e.StackTrace);
-                return;
-            }
-            if (LocalizationData == null)
-            {
-                BepInExPlugin.Debug("read Localization to json error:" + path);
-                return;
-            }
-            BepInExPlugin.Debug("read localization success!", true);
-            if (force)
-            {
-                LocalizationDic.Clear();
-            }
-            sMaxID = 0;
-            foreach (KeyValuePair<string, Table_Localization> keyValuePair in LocalizationData)
-            {
-                string key = keyValuePair.Key.Trim();
-                sMaxID = Math.Max(sMaxID, keyValuePair.Value.ID);
-                if (!LocalizationDic.ContainsKey(key))
-                {
-                    LocalizationDic.Add(key, new List<string>
-                    {
-                        keyValuePair.Value.ENGLISH,
-                        keyValuePair.Value.CHINESE,
-                        keyValuePair.Value.RUSSIAN
-                    });
-                }
-                else
-                {
-                    Error("exist key:" + keyValuePair.Key);
-                }
-            }
-        }
-
-        [HarmonyPatch(typeof(Localization), "InitLocalization")]
-        private static class Localization_InitLocalization_Patch
-        {
-            private static void Postfix()
-            {
-                if (BepInExPlugin.modEnabled.Value)
-                {
-                    InitLocalizetionText();
-                }
-            }
-        }
-        private static string GetContentLocal(string _KEY, object[] pars)
-        {
-            List<string> list;
-            int sp_index = _KEY.IndexOf('(');
-            if (LocalizationDic.TryGetValue(_KEY.Trim(), out list))
-            {
-                return GetContentLocal(list, pars);
-            }
-            if (sp_index > 0) {
-                string key = _KEY.Substring(0, sp_index);
-                if (LocalizationDic.TryGetValue(key.Trim(), out list))
-                {
-                    return GetContentLocal(list, pars) + _KEY.Substring(sp_index);
-                }
-            }
-            return _KEY;
-        }
-
-        private static string GetContentLocal(List<string> list, object[] pars)
-        {
-            string text = list[(int)Localization.CurLanguage];
-            if (pars == null || pars.Length == 0)
-            {
-                return text;
-            }
-            string[] array = text.Split(new char[]
-            {
-            '@'
-            });
-            if (array.Length > 1)
-            {
-                text = "";
-                for (int i = 0; i < array.Length - 1; i++)
-                {
-                    text += array[i];
-                    if (i < pars.Length && pars[i] != null)
-                    {
-                        text = text + " " + GetContentLocal(pars[i].ToString(), null) + " ";
-                    }
-                }
-                text += array[array.Length - 1];
-            }
-            return text;
-        }
-
-        [HarmonyPatch(typeof(Localization), "GetContent")]
-        private static class Localization_GetContent_Patch
-        {
-            private static bool Prefix(string _KEY, object[] pars, ref string __result)
-            {
-                if (!BepInExPlugin.modEnabled.Value)
-                {
-                    return true;
-                }
-                List<string> list;
-                if (LocalizationDic.TryGetValue(_KEY.Trim(), out list))
-                {
-                    __result = GetContentLocal(list, pars);
-                    return false;
-                }
-                //按照原始读法
-                return true;
-            }
         }
     }
 }
